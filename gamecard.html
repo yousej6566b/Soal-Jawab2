@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="سؤال وجواب - اختر بطاقات فريقك وابدأ التحدي">
+  <meta name="theme-color" content="#4C1D95">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <title>سؤال وجواب - اختر بطاقاتك</title>
+  <style>
+    /* ===== RESET ===== */
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{font-family:'Tajawal','Cairo',sans-serif;background:linear-gradient(170deg,#4C1D95 0%,#6D28D9 40%,#5B21B6 70%,#4C1D95 100%);min-height:100vh;color:#FFF;overflow-x:hidden;direction:rtl;position:relative}
+
+    /* ===== BG GLOW ===== */
+    .bg-glow{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;opacity:0.4;animation:bgGlowFloat 8s ease-in-out infinite alternate}
+    .bg-glow-1{width:500px;height:500px;background:rgba(139,92,246,0.3);top:-10%;left:-10%}
+    .bg-glow-2{width:400px;height:400px;background:rgba(167,139,250,0.25);bottom:-5%;right:-5%;animation-delay:-3s}
+    .bg-glow-3{width:350px;height:350px;background:rgba(192,132,252,0.2);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-5s}
+    @keyframes bgGlowFloat{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.2) translate(30px,-30px)}}
+
+    /* ===== LOADING ===== */
+    .gc-loading{position:fixed;inset:0;z-index:9999;background:linear-gradient(170deg,#4C1D95,#6D28D9);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.6s ease,visibility 0.6s ease}
+    .gc-loading.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    .gc-loading-img{width:100px;height:100px;object-fit:contain;margin-bottom:24px;animation:gcLogoPulse 1.5s ease-in-out infinite}
+    @keyframes gcLogoPulse{0%,100%{transform:scale(1);opacity:0.8}50%{transform:scale(1.08);opacity:1}}
+    .gc-loading-text{font-size:18px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:20px}
+    .gc-loading-bar-track{width:240px;height:4px;background:rgba(255,255,255,0.15);border-radius:4px;overflow:hidden}
+    .gc-loading-bar{height:100%;width:0%;background:linear-gradient(90deg,#C084FC,#A855F7,#8B5CF6);border-radius:4px;transition:width 0.3s ease}
+
+    /* ===== PAGE ===== */
+    .gc-page{opacity:0;transition:opacity 0.8s ease;position:relative;z-index:1;min-height:100vh}
+    .gc-page.visible{opacity:1}
+    .gc-container{max-width:1080px;margin:0 auto;padding:32px 20px 60px;position:relative;z-index:1}
+
+    /* ===== HEADER ===== */
+    .gc-header{display:flex;flex-direction:column;align-items:center;margin-bottom:6px}
+    .gc-logo-wrap{position:relative;margin-bottom:6px}
+    .gc-logo-glow{position:absolute;width:140px;height:140px;top:50%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(167,139,250,0.3) 0%,transparent 70%);border-radius:50%;pointer-events:none;animation:gcGlowPulse 3s ease-in-out infinite}
+    @keyframes gcGlowPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.6}50%{transform:translate(-50%,-50%) scale(1.3);opacity:1}}
+    .gc-logo-img{width:76px;height:76px;object-fit:contain;position:relative;z-index:1;animation:gcLogoFloat 4s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(167,139,250,0.4))}
+    @keyframes gcLogoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .gc-title{font-size:24px;font-weight:900;background:linear-gradient(135deg,#FFF 30%,#C084FC 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:2px}
+    .gc-subtitle{font-size:14px;font-weight:500;color:rgba(255,255,255,0.6);text-align:center;margin-bottom:24px}
+
+    /* ===== SCREENS ===== */
+    .gc-screen{display:none;animation:gcFadeIn 0.5s ease}
+    .gc-screen.active{display:block}
+    @keyframes gcFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ===== SECTIONS ===== */
+    .gc-section{margin-bottom:22px;animation:gcSectionFade 0.5s ease backwards}
+    @keyframes gcSectionFade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    .gc-section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid rgba(255,255,255,0.06)}
+    .gc-section-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+    .gc-section-icon.football{background:linear-gradient(135deg,#22C55E,#16A34A);box-shadow:0 2px 12px rgba(34,197,94,0.3)}
+    .gc-section-icon.sports{background:linear-gradient(135deg,#F97316,#EA580C);box-shadow:0 2px 12px rgba(249,115,22,0.3)}
+    .gc-section-icon.movies{background:linear-gradient(135deg,#EC4899,#DB2777);box-shadow:0 2px 12px rgba(236,72,153,0.3)}
+    .gc-section-icon.music{background:linear-gradient(135deg,#8B5CF6,#7C3AED);box-shadow:0 2px 12px rgba(139,92,246,0.3)}
+    .gc-section-icon.general{background:linear-gradient(135deg,#0EA5E9,#0284C7);box-shadow:0 2px 12px rgba(14,165,233,0.3)}
+    .gc-section-icon.kuwait{background:linear-gradient(135deg,#10B981,#059669);box-shadow:0 2px 12px rgba(16,185,129,0.3)}
+    .gc-section-icon.science{background:linear-gradient(135deg,#F59E0B,#D97706);box-shadow:0 2px 12px rgba(245,158,11,0.3)}
+    .gc-section-icon.gaming{background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 2px 12px rgba(239,68,68,0.3)}
+    .gc-section-icon.history{background:linear-gradient(135deg,#A855F7,#9333EA);box-shadow:0 2px 12px rgba(168,85,247,0.3)}
+    .gc-section-icon.shows{background:linear-gradient(135deg,#06B6D4,#0891B2);box-shadow:0 2px 12px rgba(6,182,212,0.3)}
+    .gc-section-icon.literature{background:linear-gradient(135deg,#5B21B6,#8B5CF6);box-shadow:0 2px 12px rgba(91,33,182,0.3)}
+    .gc-section-icon.religion{background:linear-gradient(135deg,#065F46,#10B981);box-shadow:0 2px 12px rgba(6,95,70,0.3)}
+    .gc-section-icon.food{background:linear-gradient(135deg,#B45309,#F59E0B);box-shadow:0 2px 12px rgba(180,83,9,0.3)}
+    .gc-section-icon.travel{background:linear-gradient(135deg,#0369A1,#38BDF8);box-shadow:0 2px 12px rgba(3,105,161,0.3)}
+    .gc-section-icon.animals{background:linear-gradient(135deg,#3F6212,#65A30D);box-shadow:0 2px 12px rgba(63,98,18,0.3)}
+    .gc-section-icon.tech{background:linear-gradient(135deg,#1E3A5F,#3B82F6);box-shadow:0 2px 12px rgba(30,58,95,0.3)}
+    .gc-section-title{font-size:16px;font-weight:800;flex:1}
+    .gc-section-count{font-size:12px;color:rgba(255,255,255,0.45);font-weight:600}
+
+    /* ===== CARDS GRID (Fixed sizing) ===== */
+    .gc-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+
+    /* ===== CARD (Consistent sizing + Premium AAA) ===== */
+    .gc-card{
+      position:relative;border-radius:16px;overflow:hidden;cursor:pointer;
+      background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);
+      border:2px solid rgba(255,255,255,0.07);
+      transform:translateY(0);
+      user-select:none;
+      /* Consistent sizing */
+      aspect-ratio:3/4;
+      display:flex;flex-direction:column;
+      /* Premium shadow */
+      box-shadow:0 8px 32px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.1);
+      transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+
+    /* Hover: scale + elevated shadow */
+    .gc-card:hover:not(.used):not(.disabled){
+      transform:translateY(-8px) scale(1.04);
+      box-shadow:0 20px 60px rgba(0,0,0,0.35), 0 0 40px rgba(168,85,247,0.1);
+      border-color:rgba(168,85,247,0.25);
+    }
+
+    /* Selected: purple neon glow */
+    .gc-card.selected{
+      border-color:#A855F7;
+      box-shadow:0 0 30px rgba(168,85,247,0.35), 0 0 60px rgba(168,85,247,0.12), inset 0 0 20px rgba(168,85,247,0.05);
+      transform:translateY(-4px);
+    }
+
+    .gc-card.used{opacity:0.25;cursor:not-allowed;filter:grayscale(0.7)}
+    .gc-card.disabled{opacity:0.4;cursor:not-allowed}
+
+    /* Consistent image area */
+    .gc-card-img-wrap{
+      width:100%;
+      /* Fixed aspect: 5/6ths of card height goes to image */
+      flex:1;
+      overflow:hidden;position:relative;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(0,0,0,0.2);
+      min-height:140px;
+    }
+
+    /* The actual PNG image */
+    .gc-card-img{
+      width:100%;height:100%;object-fit:cover;
+      transition:transform 0.6s cubic-bezier(0.175,0.885,0.32,1.275);
+      position:relative;z-index:1;
+      /* Soft shadow under the image itself */
+      filter:drop-shadow(0 4px 12px rgba(0,0,0,0.25));
+    }
+
+    /* Hover: smooth image zoom */
+    .gc-card:hover:not(.used):not(.disabled) .gc-card-img{
+      transform:scale(1.12);
+    }
+
+    /* Selected: purple neon glow filter on the PNG */
+    .gc-card.selected .gc-card-img{
+      filter:drop-shadow(0 4px 12px rgba(0,0,0,0.25)) drop-shadow(0 0 20px rgba(168,85,247,0.5)) brightness(1.05);
+    }
+
+    /* Canvas placeholder (generated by JS when image fails) */
+    .gc-card-placeholder{
+      position:absolute;inset:0;z-index:2;
+      width:100%;height:100%;
+      pointer-events:none;
+    }
+
+    /* Badge */
+    .gc-card-badge{
+      position:absolute;top:8px;right:8px;z-index:3;
+      background:linear-gradient(135deg,#A855F7,#7C3AED);
+      padding:3px 9px;border-radius:14px;font-size:10px;font-weight:800;
+      color:#fff;box-shadow:0 2px 10px rgba(168,85,247,0.5);
+      opacity:0;transform:scale(0.8) translateY(-4px);
+      transition:all 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    .gc-card.selected .gc-card-badge{opacity:1;transform:scale(1) translateY(0)}
+
+    /* Title area */
+    .gc-card-title{
+      padding:10px 10px;font-size:13px;font-weight:700;
+      text-align:center;color:#FFF;position:relative;
+      background:rgba(0,0,0,0.15);
+      backdrop-filter:blur(4px);
+    }
+    .gc-card-title::after{
+      content:'';position:absolute;bottom:0;left:50%;
+      transform:translateX(-50%);width:20px;height:2px;
+      background:linear-gradient(90deg,transparent,#A855F7,transparent);
+      border-radius:2px;opacity:0;transition:all 0.3s ease;
+    }
+    .gc-card.selected .gc-card-title::after{opacity:1;width:44px}
+
+    /* Selection checkmark */
+    .gc-card-check{
+      position:absolute;top:50%;left:50%;z-index:4;
+      transform:translate(-50%,-50%) scale(0);
+      width:40px;height:40px;border-radius:50%;
+      background:linear-gradient(135deg,#A855F7,#7C3AED);
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;font-weight:900;color:#fff;
+      box-shadow:0 4px 20px rgba(168,85,247,0.7);
+      transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+      pointer-events:none;
+    }
+    .gc-card.selected .gc-card-check{transform:translate(-50%,-50%) scale(1)}
+
+    /* ===== TEAMS ===== */
+    .gc-teams-bar{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 20px}
+    .gc-team-bar{background:rgba(255,255,255,0.05);backdrop-filter:blur(12px);border-radius:16px;padding:14px 16px;border:2px solid rgba(255,255,255,0.08);transition:all 0.3s ease;box-shadow:0 4px 20px rgba(0,0,0,0.12)}
+    .gc-team-bar.active-team{border-color:rgba(168,85,247,0.4);box-shadow:0 0 24px rgba(168,85,247,0.08),inset 0 0 20px rgba(168,85,247,0.02)}
+    .gc-team-bar:not(.active-team){opacity:0.5}
+    .gc-team-bar-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .gc-team-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0}
+    .gc-team-badge.team1{background:linear-gradient(135deg,#FF6B6B,#EE4444);box-shadow:0 2px 10px rgba(255,107,107,0.4)}
+    .gc-team-badge.team2{background:linear-gradient(135deg,#4ECDC4,#38B2AC);box-shadow:0 2px 10px rgba(78,205,196,0.4)}
+    .gc-team-bar-label{font-size:14px;font-weight:700;color:#FFF;flex:1}
+    .gc-team-bar-count{font-size:16px;font-weight:900;color:#A855F7;min-width:36px;text-align:center}
+    .gc-team-bar-cards{display:flex;gap:6px;min-height:44px;align-items:center;flex-wrap:wrap}
+    .gc-team-bar-card{width:44px;height:44px;border-radius:9px;overflow:hidden;border:2px solid rgba(168,85,247,0.3);animation:gcCardPopIn 0.3s ease;background:rgba(168,85,247,0.1);box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+    .gc-team-bar-card img{width:100%;height:100%;object-fit:cover}
+    @keyframes gcCardPopIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+    .gc-team-bar-empty{font-size:12px;color:rgba(255,255,255,0.3);font-weight:500}
+
+    /* ===== CONTINUE ===== */
+    .gc-continue-wrap{text-align:center;margin-top:2px}
+    .gc-continue-btn{padding:14px 48px;border-radius:60px;border:none;font-family:inherit;font-size:18px;font-weight:800;cursor:pointer;transition:all 0.4s ease;background:linear-gradient(135deg,#A855F7,#7C3AED);color:#fff;box-shadow:0 6px 28px rgba(168,85,247,0.25);opacity:0.4;transform:scale(0.95);pointer-events:none;position:relative;overflow:hidden}
+    .gc-continue-btn.enabled{opacity:1;transform:scale(1);pointer-events:auto;animation:gcBtnGlow 2s ease-in-out infinite alternate}
+    .gc-continue-btn.enabled:hover{transform:scale(1.04);box-shadow:0 10px 40px rgba(168,85,247,0.45)}
+    .gc-continue-btn.enabled:active{transform:scale(0.97)}
+    @keyframes gcBtnGlow{0%{box-shadow:0 6px 28px rgba(168,85,247,0.25)}100%{box-shadow:0 6px 44px rgba(168,85,247,0.45),0 0 60px rgba(168,85,247,0.1)}}
+    .gc-continue-btn .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.3);transform:scale(0);animation:gcRippleAnim 0.6s ease-out;pointer-events:none}
+    @keyframes gcRippleAnim{to{transform:scale(4);opacity:0}}
+
+    /* ===== GAME READY ===== */
+    .gc-ready{text-align:center;padding-top:12px}
+    .gc-ready-game-name{font-size:28px;font-weight:900;background:linear-gradient(135deg,#FFF 30%,#C084FC 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:24px}
+    .gc-ready-vs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;margin-bottom:28px}
+    .gc-ready-team{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:22px;padding:20px 16px;border:2px solid rgba(255,255,255,0.08);transition:all 0.3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
+    .gc-ready-team:hover{border-color:rgba(168,85,247,0.25);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.2)}
+    .gc-ready-team-name{font-size:18px;font-weight:800;margin-bottom:10px}
+    .gc-ready-team-cards{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+    .gc-ready-card{width:52px;height:52px;border-radius:10px;overflow:hidden;border:2px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.1);animation:gcCardPopIn 0.4s ease backwards;box-shadow:0 2px 10px rgba(0,0,0,0.15)}
+    .gc-ready-card:nth-child(2){animation-delay:0.1s}
+    .gc-ready-card:nth-child(3){animation-delay:0.2s}
+    .gc-ready-card img{width:100%;height:100%;object-fit:cover}
+    .gc-ready-players{font-size:13px;font-weight:600;color:rgba(255,255,255,0.5)}
+    .gc-ready-players span{font-size:18px;font-weight:900;color:#A855F7}
+    .gc-ready-vs-center{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .gc-ready-vs-glow{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.3) 0%,transparent 70%);position:absolute;animation:gcVsPulse 2s ease-in-out infinite}
+    @keyframes gcVsPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.3);opacity:1}}
+    .gc-ready-vs-letter{font-size:34px;font-weight:900;background:linear-gradient(135deg,#C084FC,#A855F7,#7C3AED);-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative;z-index:1;filter:drop-shadow(0 0 16px rgba(168,85,247,0.4));animation:gcVsTextPulse 2s ease-in-out infinite alternate}
+    @keyframes gcVsTextPulse{0%{filter:drop-shadow(0 0 8px rgba(168,85,247,0.3))}100%{filter:drop-shadow(0 0 24px rgba(168,85,247,0.5))}}
+    .gc-start-btn{margin-top:20px;padding:16px 56px;border-radius:60px;border:none;font-family:inherit;font-size:20px;font-weight:800;cursor:pointer;transition:all 0.4s ease;background:linear-gradient(135deg,#A855F7,#7C3AED);color:#fff;box-shadow:0 6px 28px rgba(168,85,247,0.35);position:relative;overflow:hidden;animation:gcBtnGlow 2s ease-in-out infinite alternate}
+    .gc-start-btn:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 10px 44px rgba(168,85,247,0.45)}
+    .gc-start-btn:active{transform:translateY(-1px) scale(0.98)}
+    .gc-start-btn .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.3);transform:scale(0);animation:gcRippleAnim 0.6s ease-out;pointer-events:none}
+    .gc-back-btn{position:fixed;top:16px;right:16px;z-index:100;width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);color:#fff;font-size:16px;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center}
+    .gc-back-btn:hover{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.3);transform:scale(1.05)}
+
+    /* ===== RESPONSIVE ===== */
+    @media(max-width:768px){
+      .gc-container{padding:20px 14px 40px}
+      .gc-logo-img{width:60px;height:60px}
+      .gc-title{font-size:20px}
+      .gc-cards-grid{grid-template-columns:repeat(3,1fr);gap:10px}
+      .gc-card-title{font-size:12px;padding:8px}
+      .gc-section{margin-bottom:18px}
+      .gc-section-icon{width:30px;height:30px;font-size:15px}
+      .gc-section-title{font-size:14px}
+      .gc-teams-bar{grid-template-columns:1fr;gap:10px}
+    }
+    @media(max-width:480px){
+      .gc-container{padding:14px 10px 32px}
+      .gc-logo-img{width:52px;height:52px}
+      .gc-title{font-size:17px}
+      .gc-subtitle{font-size:12px;margin-bottom:18px}
+      .gc-cards-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+      .gc-card{border-radius:12px}
+      .gc-card-title{font-size:11px;padding:6px}
+      .gc-card-img-wrap{min-height:100px}
+      .gc-section-header{margin-bottom:8px}
+      .gc-section{margin-bottom:14px}
+      .gc-team-bar{padding:10px 12px}
+      .gc-team-bar-card{width:38px;height:38px}
+      .gc-ready-card{width:44px;height:44px}
+      .gc-ready-vs{gap:14px}
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow bg-glow-1" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow-2" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow-3" aria-hidden="true"></div>
+  <div class="gc-loading" id="gcLoading">
+    <img src="logo.png" alt="" class="gc-loading-img" onerror="this.style.display='none'">
+    <div class="gc-loading-text">جاري التحميل...</div>
+    <div class="gc-loading-bar-track"><div class="gc-loading-bar" id="gcLoadingBar"></div></div>
+  </div>
+  <div class="gc-page" id="gcPage">
+    <button class="gc-back-btn" id="gcBackBtn" aria-label="العودة">←</button>
+    <div class="gc-container">
+      <div class="gc-header">
+        <div class="gc-logo-wrap">
+          <div class="gc-logo-glow" aria-hidden="true"></div>
+          <img src="logo.png" alt="سؤال وجواب" class="gc-logo-img" onerror="this.style.display='none'">
+        </div>
+        <h1 class="gc-title">سؤال وجواب</h1>
+        <p class="gc-subtitle">كل فريق يختار ٣ بطاقات من جميع الأقسام</p>
+      </div>
+      <div class="gc-screen active" id="gcScreenPick">
+        <div id="gcSectionsContainer"></div>
+        <div class="gc-teams-bar">
+          <div class="gc-team-bar active-team" id="gcTeamBar1">
+            <div class="gc-team-bar-header">
+              <div class="gc-team-badge team1">1</div>
+              <span class="gc-team-bar-label">الفريق الأول</span>
+              <span class="gc-team-bar-count" id="gcTeamCount1">٠/٣</span>
+            </div>
+            <div class="gc-team-bar-cards" id="gcTeamCards1"><span class="gc-team-bar-empty">اختر ٣ بطاقات</span></div>
+          </div>
+          <div class="gc-team-bar" id="gcTeamBar2">
+            <div class="gc-team-bar-header">
+              <div class="gc-team-badge team2">2</div>
+              <span class="gc-team-bar-label">الفريق الثاني</span>
+              <span class="gc-team-bar-count" id="gcTeamCount2">٠/٣</span>
+            </div>
+            <div class="gc-team-bar-cards" id="gcTeamCards2"><span class="gc-team-bar-empty">اختر ٣ بطاقات</span></div>
+          </div>
+        </div>
+        <div class="gc-continue-wrap">
+          <button class="gc-continue-btn" id="gcContinueBtn" disabled>متابعة ←</button>
+        </div>
+      </div>
+      <div class="gc-screen gc-ready" id="gcScreenReady">
+        <div class="gc-ready-game-name" id="gcReadyGameName">سؤال وجواب</div>
+        <div class="gc-ready-vs">
+          <div class="gc-ready-team" id="gcReadyTeam1">
+            <div class="gc-ready-team-name" id="gcReadyName1">الفريق الأول</div>
+            <div class="gc-ready-team-cards" id="gcReadyCards1"></div>
+            <div class="gc-ready-players">عدد اللاعبين: <span id="gcReadyPlayers1">0</span></div>
+          </div>
+          <div class="gc-ready-vs-center">
+            <div class="gc-ready-vs-glow" aria-hidden="true"></div>
+            <div class="gc-ready-vs-letter">VS</div>
+          </div>
+          <div class="gc-ready-team" id="gcReadyTeam2">
+            <div class="gc-ready-team-name" id="gcReadyName2">الفريق الثاني</div>
+            <div class="gc-ready-team-cards" id="gcReadyCards2"></div>
+            <div class="gc-ready-players">عدد اللاعبين: <span id="gcReadyPlayers2">0</span></div>
+          </div>
+        </div>
+        <button class="gc-start-btn" id="gcStartBtn"><span class="gc-start-icon">▶</span> بدء اللعبة</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function(){'use strict';
+
+    // ==============================================
+    // CARD DATA: Load from cards.json (root) or use inline fallback
+    // ==============================================
+
+    // Cloudinary base - جميع الصور من Cloudinary
+    const CLOUD_BASE = 'https://res.cloudinary.com/dydbennd/image/upload/f_webp/soal-jawab/cards/';
+
+    // Helper: generate 20 card objects for a category (fallback)
+    function genCards(key, titles, c1, c2) {
+      return titles.map((t, i) => ({
+        image: CLOUD_BASE + 'card-' + key + '-' + (i+1) + '.webp',
+        title: t,
+        icon: '✦',
+        c1: c1, c2: c2
+      }));
+    }
+
+    // Inline fallback card data
+    const inlineCategories = [
+      { key:'football', icon:'⚽', label:'كرة القدم', c1:'#166534', c2:'#22C55E', cards:genCards('football',[
+        'المنتخب','برشلونة','ريال مدريد','مانشستر سيتي','ليفربول',
+        'بايرن ميونخ','باريس سان جيرمان','مانشستر يونايتد','يوفنتوس','ميلان',
+        'إنتر ميلان','تشيلسي','آرسنال','توتنهام','بوروسيا دورتموند',
+        'أتلتيكو مدريد','روما','نابولي','أياكس','بنفيكا'
+      ],'#166534','#22C55E')},
+      { key:'sports', icon:'🏆', label:'الرياضات', c1:'#C2410C', c2:'#F97316', cards:genCards('sports',[
+        'UFC','كاراتيه','ملاكمة','فورمولا 1','كرة السلة',
+        'تنس','سباحة','جمباز','مصارعة حرة','جودو',
+        'تيكواندو','كرة اليد','الريشة الطائرة','كرة الطائرة','ركوب الخيل',
+        'الرماية','ألعاب القوى','رفع الأثقال','التجديف','الدراجات'
+      ],'#C2410C','#F97316')},
+      { key:'movies', icon:'🎬', label:'أفلام', c1:'#7F1D1D', c2:'#DC2626', cards:genCards('movies',[
+        'أكشن','كوميدي','رعب','خيال علمي','دراما',
+        'أنمي','إثارة','غموض','واقعي','خيالي',
+        'تاريخي','حربي','بوليسي','رومانسي','مغامرات',
+        'خارق للطبيعة','رسوم متحركة','وثائقي','موسيقي','غرب أمريكي'
+      ],'#7F1D1D','#DC2626')},
+      { key:'music', icon:'🎵', label:'موسيقى', c1:'#881337', c2:'#E11D48', cards:genCards('music',[
+        'أغاني عربية','أغاني خليجية','أغاني عالمية','كلاسيكية','راب',
+        'روك','جاز','هيب هوب','بوب','إلكترونية',
+        'بلوز','ريجي','آلات موسيقية','أوبرا','سيمفونية',
+        'تراثية','بدوية','مقامات','نشيد','فلكلور'
+      ],'#881337','#E11D48')},
+      { key:'general', icon:'🌍', label:'معلومات عامة', c1:'#0C4A6E', c2:'#0EA5E9', cards:genCards('general',[
+        'جغرافيا','حيوانات','نباتات','اختراعات','فضاء',
+        'محيطات','جبال','أنهار','جزر','بحيرات',
+        'صحاري','غابات','طقس','طاقة','ثروات طبيعية',
+        'الكواكب','النجوم','المجرات','الأرض','الكون'
+      ],'#0C4A6E','#0EA5E9')},
+      { key:'kuwait', icon:'🇰🇼', label:'الكويت', c1:'#064E3B', c2:'#10B981', cards:genCards('kuwait',[
+        'تاريخ الكويت','معالم الكويت','شخصيات كويتية','عادات وتقاليد','طعام كويتي',
+        'اللهجة الكويتية','الأعياد الكويتية','التراث البحري','الديوانية','السوق القديم',
+        'أعلام الكويت','الأدب الكويتي','الفن الكويتي','الرياضة الكويتية','الإعلام الكويتي',
+        'المطاعم الكويتية','الأزياء الكويتية','الحرف الكويتية','الموسيقى الكويتية','جزر الكويت'
+      ],'#064E3B','#10B981')},
+      { key:'science', icon:'🔬', label:'علوم', c1:'#155E75', c2:'#06B6D4', cards:genCards('science',[
+        'فيزياء','كيمياء','أحياء','تكنولوجيا','رياضيات',
+        'فلك','جيولوجيا','طب','صيدلة','هندسة',
+        'ذكاء اصطناعي','روبوتات','طاقة نووية','كمبيوتر','إنترنت',
+        'علم النفس','علم الاجتماع','بيئة','زراعة','أبحاث الفضاء'
+      ],'#155E75','#06B6D4')},
+      { key:'gaming', icon:'🎮', label:'ألعاب', c1:'#172554', c2:'#2563EB', cards:genCards('gaming',[
+        'بلايستيشن','إكس بوكس','نينتندو','بي سي','ألعاب الجوال',
+        'فورتنايت','ماينكرافت','فيفا','كول أوف ديوتي','بابجي',
+        'فري فاير','كلاش رويال','عالمي','سباق سيارات','ألعاب استراتيجية',
+        'ألعاب ألغاز','ألعاب رياضية','ألعاب حروب','ألعاب خيالية','ألعاب كلاسيكية'
+      ],'#172554','#2563EB')},
+      { key:'history', icon:'📚', label:'تاريخ', c1:'#78350F', c2:'#D97706', cards:genCards('history',[
+        'تاريخ إسلامي','تاريخ حديث','حروب','حضارات','شخصيات تاريخية',
+        'تاريخ قديم','تاريخ وسيط','تاريخ عربي','تاريخ عالمي','غزوات',
+        'دول إسلامية','خلافات','معارك','ثورات','اكتشافات أثرية',
+        'أهرامات','قلاع','ممالك','إمبراطوريات','الاستكشاف'
+      ],'#78350F','#D97706')},
+      { key:'shows', icon:'🎭', label:'مسلسلات', c1:'#9D174D', c2:'#EC4899', cards:genCards('shows',[
+        'مسلسلات عربية','مسلسلات خليجية','برامج','كرتون','وثائقيات',
+        'مسلسلات تركية','مسلسلات أجنبية','مسلسلات كوميدية','مسلسلات درامية','مسلسلات تاريخية',
+        'برامج واقعية','برامج طبخ','برامج سفر','برامج مسابقات','برامج ترفيهية',
+        'رسوم متحركة قديمة','رسوم متحركة حديثة','أنمي','أفلام كرتون','مسلسلات كرتون'
+      ],'#9D174D','#EC4899')},
+      // === NEW CATEGORIES ===
+      { key:'literature', icon:'📖', label:'أدب', c1:'#5B21B6', c2:'#8B5CF6', cards:genCards('literature',[
+        'شعر عربي','شعر عالمي','رواية','قصة قصيرة','مسرحية',
+        'أدب عربي','أدب عالمي','أدب أطفال','أدب خيالي','أدب بوليسي',
+        'كتب تاريخية','سير ذاتية','أدب رحلات','أمثال وحكم','أدب ساخر',
+        'نقد أدبي','أدب إسلامي','تراث أدبي','خواطر','مكتبات'
+      ],'#5B21B6','#8B5CF6')},
+      { key:'religion', icon:'🕌', label:'دين', c1:'#065F46', c2:'#10B981', cards:genCards('religion',[
+        'القرآن الكريم','الحديث الشريف','الفقه','العقيدة','السيرة النبوية',
+        'الصحابة','الأنبياء','التفسير','الأذكار','الصلاة',
+        'الصيام','الزكاة','الحج','الأخلاق الإسلامية','الدعاء',
+        'قصص إسلامية','المساجد','التاريخ الإسلامي','العمرة','رمضان'
+      ],'#065F46','#10B981')},
+      { key:'food', icon:'🍳', label:'طبخ', c1:'#B45309', c2:'#F59E0B', cards:genCards('food',[
+        'أكلات خليجية','أكلات عربية','أكلات عالمية','حلويات','مقبلات',
+        'شوربات','سلطات','مشروبات','خبز','أطباق رئيسية',
+        'أكلات شعبية','أكلات صحية','أكلات سريعة','وجبات عائلية','مأكولات بحرية',
+        'أكلات نباتية','أكلات اللحوم','بهارات وتوابل','طبخ تقليدي','طبخ حديث'
+      ],'#B45309','#F59E0B')},
+      { key:'travel', icon:'✈️', label:'سفر', c1:'#0369A1', c2:'#38BDF8', cards:genCards('travel',[
+        'دول عربية','دول أجنبية','مدن سياحية','جزر','شواطئ',
+        'فنادق','مطاعم عالمية','معالم سياحية','مطارات','رحلات',
+        'سياحة دينية','سياحة ترفيهية','سياحة ثقافية','سياحة مغامرات','سياحة علاجية',
+        'السياحة في أوروبا','السياحة في آسيا','السياحة في أفريقيا','العطلات','السفر في الشتاء'
+      ],'#0369A1','#38BDF8')},
+      { key:'animals', icon:'🐾', label:'حيوانات', c1:'#3F6212', c2:'#65A30D', cards:genCards('animals',[
+        'حيوانات برية','حيوانات أليفة','طيور','أسماك','زواحف',
+        'ثدييات','حيوانات مفترسة','حيوانات مهددة','حديقة حيوان','حشرات',
+        'حيوانات بحرية','ديناصورات','قرود','قطط','كلاب',
+        'خيول','فيلة','أسود','نمور','دببة'
+      ],'#3F6212','#65A30D')},
+      { key:'tech', icon:'📱', label:'تقنية', c1:'#1E3A5F', c2:'#3B82F6', cards:genCards('tech',[
+        'ذكاء اصطناعي','برمجة','تطبيقات','مواقع','أمن سيبراني',
+        'شبكات','قواعد بيانات','سحابة','إنترنت الأشياء','واقع افتراضي',
+        'بلوك تشين','العملات الرقمية','الروبوتات','الأجهزة الذكية','وسائل التواصل',
+        'التجارة الإلكترونية','التسويق الرقمي','الجرافيكس','ألعاب إلكترونية','تطوير الويب'
+      ],'#1E3A5F','#3B82F6')}
+    ];
+
+    // Try to load from cards.json (root), fallback to data/cards.json, then inline
+    let categories = [];
+    async function loadCardData() {
+      // Try root first (GitHub Pages)
+      for (const path of ['cards.json', 'data/cards.json']) {
+        try {
+          const resp = await fetch(path + '?t=' + Date.now());
+          if (!resp.ok) throw new Error('Failed to fetch ' + path);
+          const json = await resp.json();
+          if (json && json.categories && json.categories.length > 0) {
+            categories = json.categories.map(cat => ({
+              ...cat,
+              cards: cat.cards.map(card => ({
+                ...card,
+                image: card.image || CLOUD_BASE + (card.file || '').replace(/\.png$/,'.webp'),
+                c1: cat.c1,
+                c2: cat.c2,
+                icon: cat.icon
+              }))
+            }));
+            console.log('✅ Loaded from ' + path + ' (' + json.totalCards + ' cards)');
+            return;
+          }
+        } catch(e) {
+          console.warn('⚠️ Could not load ' + path + ', trying next...');
+        }
+      }
+      // Fallback to inlineEnrich
+      categories = inlineCategories;
+      console.log('✅ Using inline card data (' + categories.length + ' categories)');
+    }
+
+    // ==============================================
+    // DOM REFS
+    // ==============================================
+    const $=id=>document.getElementById(id);
+    const secCont=$('gcSectionsContainer');
+    const b1=$('gcTeamBar1'),b2=$('gcTeamBar2');
+    const tc1=$('gcTeamCards1'),tc2=$('gcTeamCards2');
+    const tn1=$('gcTeamCount1'),tn2=$('gcTeamCount2');
+    const contBtn=$('gcContinueBtn');
+    const scPick=$('gcScreenPick'),scReady=$('gcScreenReady');
+    const rName=$('gcReadyGameName'),rn1=$('gcReadyName1'),rn2=$('gcReadyName2');
+    const rc1=$('gcReadyCards1'),rc2=$('gcReadyCards2');
+    const rp1=$('gcReadyPlayers1'),rp2=$('gcReadyPlayers2');
+    const sBtn=$('gcStartBtn'),bBtn=$('gcBackBtn');
+
+    let curT=1; const t1=[],t2=[],MAX=3;
+    const toAr=n=>n.toString().replace(/\d/g,d=>['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][parseInt(d,10)]);
+
+    // ==============================================
+    // PLACEHOLDER GENERATOR (Canvas fallback when PNG not found)
+    // ==============================================
+    function generatePlaceholder(c1, c2, icon, title) {
+      const c = document.createElement('canvas');
+      c.width = 300; c.height = 300;
+      const ctx = c.getContext('2d');
+
+      // Gradient bg
+      const g = ctx.createLinearGradient(0,0,300,300);
+      g.addColorStop(0,c1); g.addColorStop(1,c2);
+      ctx.fillStyle=g; roundCanvasRect(ctx,0,0,300,300,16); ctx.fill();
+
+      // Subtle dot pattern
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(let x=15;x<300;x+=30) for(let y=15;y<300;y+=30){ctx.beginPath();ctx.arc(x,y,1.2,0,Math.PI*2);ctx.fill()}
+
+      // Glow orb
+      const glow=ctx.createRadialGradient(250,60,0,250,60,140);
+      glow.addColorStop(0,'rgba(255,255,255,0.08)'); glow.addColorStop(1,'transparent');
+      ctx.fillStyle=glow; ctx.fillRect(0,0,300,300);
+
+      // Dark overlay at bottom
+      const ov=ctx.createLinearGradient(0,150,0,300);
+      ov.addColorStop(0,'transparent'); ov.addColorStop(1,'rgba(0,0,0,0.4)');
+      ctx.fillStyle=ov; ctx.fillRect(0,0,300,300);
+
+      // Decorative geometric circle (NO EMOJI)
+      ctx.shadowColor='rgba(0,0,0,0.25)'; ctx.shadowBlur=16;
+      ctx.fillStyle='rgba(255,255,255,0.08)';
+      ctx.beginPath(); ctx.arc(150,140,55,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+      // Inner ring
+      ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(150,140,40,0,Math.PI*2); ctx.stroke();
+      // Diamond
+      ctx.fillStyle='rgba(255,255,255,0.1)';
+      ctx.beginPath(); ctx.moveTo(150,115); ctx.lineTo(168,140); ctx.lineTo(150,165); ctx.lineTo(132,140); ctx.closePath(); ctx.fill();
+      // Dots around ring
+      for(let a=0;a<8;a++){
+        const angle=(a/8)*Math.PI*2;
+        ctx.fillStyle='rgba(255,255,255,0.05)';
+        ctx.beginPath(); ctx.arc(150+Math.cos(angle)*55,140+Math.sin(angle)*55,2.5,0,Math.PI*2); ctx.fill();
+      }
+
+      // Corner decoration
+      ctx.beginPath(); ctx.arc(250,230,24,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.fill();
+
+      // Title
+      ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.font='700 15px Tajawal,sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(title,150,210);
+
+      // Accent line
+      const lg=ctx.createLinearGradient(110,233,190,233);
+      lg.addColorStop(0,'transparent'); lg.addColorStop(0.5,'rgba(255,255,255,0.2)'); lg.addColorStop(1,'transparent');
+      ctx.fillStyle=lg; ctx.fillRect(110,232,80,2);
+
+      // Border
+      ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1.5;
+      roundCanvasRect(ctx,0,0,300,300,16); ctx.stroke();
+
+      return c;
+    }
+
+    function roundCanvasRect(ctx,x,y,w,h,r){
+      ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+      ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+      ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+      ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+    }
+
+    function createCardImage(card) {
+      const wrap = document.createElement('div');
+      wrap.className = 'gc-card-img-wrap';
+      wrap.style.background = `linear-gradient(135deg,${card.c1}44,${card.c2}33)`;
+
+      const img = document.createElement('img');
+      img.className = 'gc-card-img';
+      img.alt = card.title;
+      img.src = card.image || '';
+      img.onerror = function() { this.src = 'logo.png'; };
+      wrap.appendChild(img);
+
+      return wrap;
+    }
+
+    // ==============================================
+    // RENDER ALL SECTIONS
+    // ==============================================
+    function renderAllSections(){
+      secCont.innerHTML='';
+      categories.forEach(cat=>{
+        const sec=document.createElement('div');
+        sec.className='gc-section';
+        sec.style.animationDelay=(categories.indexOf(cat)*0.04)+'s';
+        const hdr=document.createElement('div');
+        hdr.className='gc-section-header';
+        hdr.innerHTML=`<div class="gc-section-icon ${cat.key}">${cat.icon}</div><span class="gc-section-title">${cat.label}</span><span class="gc-section-count">${cat.cards.length} بطاقات</span>`;
+        sec.appendChild(hdr);
+        const grid=document.createElement('div');
+        grid.className='gc-cards-grid';
+        cat.cards.forEach((card,idx)=>{
+          const el=document.createElement('div');
+          el.className='gc-card';
+          el.dataset.catKey=cat.key;
+          el.dataset.cardIdx=idx;
+          el.dataset.cardTitle=card.title;
+
+          el.dataset.cardC1=card.c1;
+          el.dataset.cardC2=card.c2;
+          el.dataset.cardIcon=card.icon;
+          const inT1=t1.some(s=>s.cat===cat.key&&s.idx===idx);
+          const inT2=t2.some(s=>s.cat===cat.key&&s.idx===idx);
+          if(inT1)el.classList.add('selected','team1-selected');
+          if(inT2)el.classList.add('selected','team2-selected');
+
+          // Dynamically create image wrapper
+          const imgWrap = createCardImage(card);
+          el.appendChild(imgWrap);
+
+          // Badge + Title
+          const badge=document.createElement('div');badge.className='gc-card-badge';badge.textContent='✓';
+          const check=document.createElement('div');check.className='gc-card-check';check.textContent='✓';
+          const title=document.createElement('div');title.className='gc-card-title';title.textContent=card.title;
+          el.appendChild(badge); el.appendChild(check); el.appendChild(title);
+
+          el.addEventListener('click',function(){handleCardClick(cat.key,idx,this)});
+
+          grid.appendChild(el);
+          setTimeout(()=>{el.style.transition='opacity 0.35s ease, transform 0.35s ease';el.style.opacity='1';el.style.transform='translateY(0)'},idx*50);
+        });
+        sec.appendChild(grid);
+        secCont.appendChild(sec);
+      });
+      updateAllCardsState();
+    }
+
+    // ==============================================
+    // CARD STATE
+    // ==============================================
+    function getCardState(catKey,idx){
+      const cur=curT===1?t1:t2,oth=curT===1?t2:t1;
+      return{inCur:cur.some(s=>s.cat===catKey&&s.idx===idx),inOth:oth.some(s=>s.cat===catKey&&s.idx===idx),curFull:cur.length>=MAX};
+    }
+    function updCard(el){
+      const{inCur,inOth,curFull}=getCardState(el.dataset.catKey,parseInt(el.dataset.cardIdx));
+      el.classList.remove('used','disabled');
+      if(inOth)el.classList.add('used');else if(curFull&&!inCur)el.classList.add('disabled');
+    }
+    function updAll(){
+      document.querySelectorAll('.gc-card').forEach(c=>{
+        const k=c.dataset.catKey,i=parseInt(c.dataset.cardIdx);
+        const a=t1.some(s=>s.cat===k&&s.idx===i),b=t2.some(s=>s.cat===k&&s.idx===i);
+        c.className='gc-card';if(a)c.classList.add('selected','team1-selected');if(b)c.classList.add('selected','team2-selected');
+        updCard(c);
+      });
+    }
+
+    // ==============================================
+    // HANDLE CLICK
+    // ==============================================
+    function handleCardClick(catKey,idx,el){
+      const cur=curT===1?t1:t2,oth=curT===1?t2:t1;
+      if(oth.some(s=>s.cat===catKey&&s.idx===idx))return;
+      const f=cur.findIndex(s=>s.cat===catKey&&s.idx===idx);
+      if(f!==-1){cur.splice(f,1);updateUI();return}
+      if(cur.length>=MAX)return;
+      const cat=categories.find(c=>c.key===catKey);if(!cat)return;
+      const cd=cat.cards[idx];
+      cur.push({cat:catKey,idx,title:cd.title,image:cd.image});
+      updateUI();
+      if(curT===1&&t1.length>=MAX&&t2.length<MAX)setTeam(2);
+      else if(curT===2&&t2.length>=MAX&&t1.length<MAX)setTeam(1);
+    }
+    function setTeam(t){curT=t;b1.classList.toggle('active-team',t===1);b2.classList.toggle('active-team',t===2);updAll()}
+    function updateUI(){
+      tc1.innerHTML='';t1.forEach(s=>{const d=document.createElement('div');d.className='gc-team-bar-card';const img=document.createElement('img');img.src=s.image;img.alt=s.title;img.onerror=function(){this.src='logo.png'};d.appendChild(img);tc1.appendChild(d)});
+      if(!t1.length)tc1.innerHTML='<span class="gc-team-bar-empty">اختر ٣ بطاقات</span>';tn1.textContent=toAr(t1.length)+'/٣';
+      tc2.innerHTML='';t2.forEach(s=>{const d=document.createElement('div');d.className='gc-team-bar-card';const img=document.createElement('img');img.src=s.image;img.alt=s.title;img.onerror=function(){this.src='logo.png'};d.appendChild(img);tc2.appendChild(d)});
+      if(!t2.length)tc2.innerHTML='<span class="gc-team-bar-empty">اختر ٣ بطاقات</span>';tn2.textContent=toAr(t2.length)+'/٣';
+      const done=t1.length>=MAX&&t2.length>=MAX;
+      contBtn.disabled=!done;contBtn.classList.toggle('enabled',done);
+      updAll();
+    }
+
+    function ripple(e,btn){
+      const r=document.createElement('span');r.className='ripple';
+      const rect=btn.getBoundingClientRect(),s=Math.max(rect.width,rect.height);
+      r.style.cssText='left:'+(e.clientX-rect.left-s/2)+'px;top:'+(e.clientY-rect.top-s/2)+'px;width:'+s+'px;height:'+s+'px';
+      btn.appendChild(r);setTimeout(()=>r.remove(),600);
+    }
+
+    // ==============================================
+    // LOADING
+    // ==============================================
+    (function(){const bar=$('gcLoadingBar'),ld=$('gcLoading'),pg=$('gcPage');let p=0;const iv=setInterval(()=>{p+=Math.random()*15+5;if(p>=100){p=100;clearInterval(iv);bar.style.width='100%';setTimeout(()=>{ld.classList.add('hidden');pg.classList.add('visible')},400)}bar.style.width=Math.min(p,100)+'%'},130)})();
+
+    // ==============================================
+    // EVENTS
+    // ==============================================
+    bBtn.addEventListener('click',()=>window.location.href='index.html');
+    contBtn.addEventListener('click',function(e){
+      if(this.disabled)return;ripple(e,this);
+      rName.textContent='سؤال وجواب';rn1.textContent='الفريق الأول';
+      rc1.innerHTML='';t1.forEach(s=>{const d=document.createElement('div');d.className='gc-ready-card';const img=document.createElement('img');img.src=s.image;img.alt=s.title;img.onerror=function(){this.src='logo.png'};d.appendChild(img);rc1.appendChild(d)});
+      rp1.textContent='0';rn2.textContent='الفريق الثاني';
+      rc2.innerHTML='';t2.forEach(s=>{const d=document.createElement('div');d.className='gc-ready-card';const img=document.createElement('img');img.src=s.image;img.alt=s.title;img.onerror=function(){this.src='logo.png'};d.appendChild(img);rc2.appendChild(d)});
+      rp2.textContent='0';scPick.classList.remove('active');scReady.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});
+    });
+    sBtn.addEventListener('click',function(e){
+      ripple(e,this);
+      // Save game data and navigate to game
+      const gameData = {
+        team1: t1.map(s => ({cat:s.cat, idx:s.idx, title:s.title, image:s.image})),
+        team2: t2.map(s => ({cat:s.cat, idx:s.idx, title:s.title, image:s.image})),
+        team1Name: rn1.textContent || 'الفريق الأول',
+        team2Name: rn2.textContent || 'الفريق الثاني'
+      };
+      localStorage.setItem('gs_gameData', JSON.stringify(gameData));
+      window.location.href = 'gamestart.html';
+    });
+
+    function showToast(msg,type){
+      const old=document.querySelector('.gc-toast');if(old)old.remove();
+      const t=document.createElement('div');t.className='gc-toast';
+      t.style.cssText='position:fixed;top:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;z-index:10001;direction:rtl;text-align:center;background:'+(type==='error'?'rgba(255,68,68,0.9)':'rgba(76,175,80,0.9)')+';color:#fff;box-shadow:0 8px 28px rgba(0,0,0,0.3);backdrop-filter:blur(12px);animation:gcToastIn 0.4s ease;';
+      t.textContent=msg;document.body.appendChild(t);
+      if(!document.getElementById('gcToastStyle')){
+        const s=document.createElement('style');s.id='gcToastStyle';
+        s.textContent='@keyframes gcToastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+        document.head.appendChild(s);
+      }
+      setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(-20px)';t.style.transition='all 0.4s ease';setTimeout(()=>t.remove(),400)},3000);
+    }
+
+    // ==============================================
+    // INIT - Wait for card data to load, then render
+    // ==============================================
+    (async function init() {
+      await loadCardData();
+      renderAllSections();
+      setTeam(1);
+    })();
+    })();
+  </script>
+</body>
+</html>

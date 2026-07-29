@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☁️ رفع الصور إلى Cloudinary</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Tajawal',sans-serif;background:#0a0a1a;color:#fff;padding:20px;direction:rtl}
+h1{font-size:28px;font-weight:900;margin-bottom:8px;background:linear-gradient(135deg,#fff 30%,#C084FC 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.sub{text-align:center;color:rgba(255,255,255,0.5);margin-bottom:30px;font-size:14px}
+.container{max-width:950px;margin:0 auto}
+.card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:24px;margin-bottom:16px}
+.card h2{font-size:18px;margin-bottom:12px}
+code{background:rgba(168,85,247,0.15);color:#C084FC;padding:2px 8px;border-radius:4px;font-size:13px}
+.btn{padding:12px 28px;border:none;border-radius:14px;font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.3s ease;margin:0 8px 12px;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:linear-gradient(135deg,#A855F7,#7C3AED);color:#fff;box-shadow:0 4px 20px rgba(168,85,247,0.3)}
+.btn-success{background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;box-shadow:0 4px 20px rgba(34,197,94,0.3)}
+.btn-danger{background:linear-gradient(135deg,#EF4444,#DC2626);color:#fff;box-shadow:0 4px 20px rgba(239,68,68,0.3)}
+.btn-secondary{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.1)}
+.btn-warning{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;box-shadow:0 4px 20px rgba(245,158,11,0.3)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important}
+.step{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;padding:14px 18px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.05)}
+.step-num{min-width:30px;height:30px;border-radius:50%;background:#A855F7;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.step-content{flex:1;font-size:14px;color:rgba(255,255,255,0.8)}
+.step-content strong{color:#fff}
+input,select,textarea{width:100%;padding:12px 16px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-family:'Tajawal',sans-serif;font-size:14px;margin-bottom:12px;direction:ltr;text-align:left}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#A855F7}
+textarea{min-height:120px;font-family:monospace;resize:vertical}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:4px;color:rgba(255,255,255,0.6)}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>*{flex:1;min-width:200px}
+.status{padding:14px;border-radius:12px;margin-top:12px;display:none;font-weight:700;text-align:center;font-size:14px;line-height:1.7}
+.status.show{display:block}
+.status.success{background:rgba(34,197,94,0.15);color:#4ADE80;border:1px solid rgba(34,197,94,0.2)}
+.status.info{background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.2)}
+.status.error{background:rgba(239,68,68,0.15);color:#F87171;border:1px solid rgba(239,68,68,0.2)}
+.status.warning{background:rgba(245,158,11,0.15);color:#FBBF24;border:1px solid rgba(245,158,11,0.2)}
+.progress{width:100%;height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;margin:8px 0;display:none}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#A855F7,#22C55E);border-radius:4px;transition:width 0.3s ease}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px;max-height:400px;overflow-y:auto}
+.thumb{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:8px;text-align:center}
+.thumb img{width:100%;height:auto;border-radius:6px;margin-bottom:4px}
+.thumb .name{font-size:10px;color:rgba(255,255,255,0.4)}
+.thumb .status-icon{font-size:16px}
+.thumb.done{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05)}
+.thumb.fail{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05)}
+</style>
+</head>
+<body>
+<h1>☁️ رفع صور الكروت إلى Cloudinary</h1>
+<p class="sub">ارفع صور PNG، حوّلها إلى WebP تلقائياً، واحصل على روابط CDN مباشرة</p>
+<div class="container">
+
+<!-- الإعدادات -->
+<div class="card">
+<h2>⚙️ إعدادات Cloudinary</h2>
+<div class="row">
+  <div>
+    <label>🔑 Cloud Name</label>
+    <input type="text" id="cloudName" placeholder="your-cloud-name" value="dydbennd">
+  </div>
+  <div>
+    <label>📁 Unsigned Upload Preset</label>
+    <input type="text" id="uploadPreset" placeholder="soal-jawab-cards" value="">
+  </div>
+  <div>
+    <label>📂 مجلد الرفع</label>
+    <input type="text" id="cloudFolder" placeholder="soal-jawab/cards" value="soal-jawab/cards">
+  </div>
+</div>
+
+<div class="step" style="background:rgba(59,130,246,0.05);border-color:rgba(59,130,246,0.1)">
+  <div class="step-num" style="background:#3B82F6">💡</div>
+  <div class="step-content">
+    <strong>كيف تحصل على الإعدادات:</strong><br>
+    1. سجل في <a href="https://cloudinary.com/users/register/free" target="_blank" style="color:#C084FC">Cloudinary (مجاني)</a><br>
+    2. الـ Cloud Name تجده في Dashboard<br>
+    3. أنشئ Upload Preset: Settings → Upload → "Add upload preset" → اختر <strong>Unsigned</strong> + <strong>Auto-create folder</strong><br>
+    4. فعّل WebP: في نفس الصفحة أضف <code>f_webp</code> في Incoming Transformation
+  </div>
+</div>
+</div>
+
+<!-- Tools -->
+<div class="card">
+<h2>🔧 الأدوات</h2>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+  <button class="btn btn-primary" onclick="generateUrls()">🔗 توليد روابط CDN</button>
+  <button class="btn btn-success" onclick="downloadCardsJSON()" id="downloadBtn">💾 تحميل cards.json محدث</button>
+  <button class="btn btn-warning" onclick="openCloudinary()">☁️ فتح Cloudinary</button>
+</div>
+
+<label>📋 JSON الناتج (انسخه أو حمّله)</label>
+<textarea id="outputJSON" placeholder="// 1. املأ الإعدادات في الأعلى&#10;// 2. اضغط 'توليد روابط CDN'&#10;// 3. ارفع الصور يدوياً لـ Cloudinary من خلال الرابط أعلاه&#10;// 4. حمّل cards.json المحدث ليحل محل الملف القديم"></textarea>
+</div>
+
+<!-- Upload Status -->
+<div class="card" id="uploadCard" style="display:none">
+<h2>📤 حالة الرفع</h2>
+<div class="progress" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="status" id="uploadStatus"></div>
+<div class="grid" id="uploadGrid"></div>
+</div>
+
+<!-- Instructions -->
+<div class="card">
+<h2>📋 تعليمات كاملة</h2>
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <strong>أنشئ حساب Cloudinary</strong><br>
+    سجل في الرابط أعلاه (مجاني، 25GB تخزين)
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <strong>ارفع الصور يدوياً</strong><br>
+    من Cloudinary Dashboard → Media Library → اسحب جميع <code>card-*.png</code> إلى مجلد <code>soal-jawab/cards</code>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <strong>استخدم WebP تلقائياً</strong><br>
+    Cloudinary يحول PNG إلى WebP تلقائياً. الرابط النهائي راح يكون مثل:<br>
+    <code>https://res.cloudinary.com/&lt;cloud&gt;/image/upload/f_webp/soal-jawab/cards/card-football-1.png</code>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    <strong>حدّث cards.json</strong><br>
+    اضغط "توليد روابط CDN" ثم "تحميل cards.json محدث" واستبدل به الملف القديم في <code>data/</code>
+  </div>
+</div>
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-content">
+    <strong>اللعبة حتستخدم CDN تلقائياً</strong><br>
+    اللعبة بتجرب رابط CDN أولاً، وإذا فشل بتجرب الصورة المحلية، وإذا فشلت تستخدم Canvas placeholder
+  </div>
+</div>
+</div>
+
+</div>
+
+<script>
+// ==========================================
+// توليد روابط CDN من cards.json
+// ==========================================
+function generateUrls() {
+  const cloudName = document.getElementById('cloudName').value.trim();
+  const folder = document.getElementById('cloudFolder').value.trim();
+  
+  if (!cloudName) {
+    showStatus('⚠️ الرجاء إدخال Cloud Name', 'error');
+    return;
+  }
+  
+  const baseUrl = 'https://res.cloudinary.com/' + cloudName + '/image/upload/';
+  const folderPath = folder ? folder.replace(/^\/+|\/+$/g, '') + '/' : '';
+  
+  showStatus('⏳ جاري تحميل cards.json...', 'info');
+  
+  fetch('data/cards.json?v=' + Date.now())
+    .then(resp => {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    })
+    .then(data => {
+      const updated = JSON.parse(JSON.stringify(data));
+      
+      // Update cloudinary info
+      updated.cloudinary = {
+        cloudName: cloudName,
+        baseUrl: baseUrl,
+        folder: folder,
+        webpEnabled: true,
+        note: 'تم التوليد في ' + new Date().toLocaleString('ar-KW')
+      };
+      
+      // Update each card with CDN URL
+      updated.categories.forEach(cat => {
+        cat.cards.forEach(card => {
+          // Generate CDN URL with WebP
+          const cdnUrl = baseUrl + 'f_webp/' + folderPath + card.file.replace(/\.png$/i, '.png');
+          card.image = cdnUrl;
+        });
+      });
+      
+      const output = JSON.stringify(updated, null, 2);
+      document.getElementById('outputJSON').value = output;
+      
+      const size = (new Blob([output]).size / 1024).toFixed(0);
+      showStatus('✅ تم توليد ' + updated.totalCards + ' رابط CDN! حجم JSON: ' + size + ' كيلوبايت', 'success');
+    })
+    .catch(err => {
+      console.error(err);
+      showStatus('⚠️ فشل تحميل data/cards.json. هل الملف موجود؟ (' + err.message + ')<br><br>💡 طريقة بديلة: استخدم الأمر التالي يدوياً:<br><code style="display:inline-block;background:#222;padding:8px 12px;border-radius:8px;margin:8px 0;direction:ltr">https://res.cloudinary.com/&lt;cloud&gt;/image/upload/f_webp/soal-jawab/cards/card-football-1.png</code>', 'error');
+    });
+}
+
+// ==========================================
+// تحميل cards.json المحدث
+// ==========================================
+function downloadCardsJSON() {
+  const text = document.getElementById('outputJSON').value;
+  if (!text || text.startsWith('//')) {
+    showStatus('⚠️ يرجى توليد الروابط أولاً', 'error');
+    return;
+  }
+  
+  try {
+    JSON.parse(text); // validate
+    const blob = new Blob([text], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'cards.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showStatus('💾 تم تحميل cards.json! ضعه في مجلد data/', 'success');
+  } catch(e) {
+    showStatus('⚠️ الـ JSON غير صالح: ' + e.message, 'error');
+  }
+}
+
+// ==========================================
+// فتح Cloudinary
+// ==========================================
+function openCloudinary() {
+  window.open('https://cloudinary.com/console/media_library', '_blank');
+}
+
+// ==========================================
+// إظهار الحالة
+// ==========================================
+function showStatus(msg, type) {
+  const el = document.getElementById('outputJSON');
+  if (type === 'error' || type === 'success' || type === 'info' || type === 'warning') {
+    const statusEl = document.getElementById('uploadStatus');
+    const cardEl = document.getElementById('uploadCard');
+    cardEl.style.display = 'block';
+    statusEl.className = 'status show ' + type;
+    statusEl.innerHTML = msg;
+    
+    if (type === 'success') {
+      setTimeout(function(){ cardEl.style.display = 'none'; }, 8000);
+    }
+  }
+}
+
+// Pre-fill Cloud Name
+window.onload = function() {
+  document.getElementById('cloudName').value = 'dydbennd';
+  document.getElementById('cloudFolder').value = 'soal-jawab/cards';
+  
+  fetch('data/cards.json?v=' + Date.now())
+    .then(resp => resp.json())
+    .then(data => {
+      if (data.cloudinary && data.cloudinary.cloudName && data.cloudinary.cloudName !== 'your-cloud-name') {
+        document.getElementById('cloudFolder').value = data.cloudinary.folder || 'soal-jawab/cards';
+      }
+    })
+    .catch(function(){});
+};
+</script>
+</body>
+</html>

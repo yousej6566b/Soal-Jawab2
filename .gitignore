@@ -1,0 +1,21 @@
+# ===== Images: Exclude all card/PNG files from GitHub =====
+# Card images are hosted externally on Cloudinary
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.ico
+
+# ===== Allow specific exceptions =====
+!favicon.png
+!logo.png
+
+# ===== Node =====
+node_modules/
+npm-debug.log
+
+# ===== OS =====
+.DS_Store
+Thumbs.db

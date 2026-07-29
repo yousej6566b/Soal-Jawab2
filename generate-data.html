@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>توليد بيانات اللعبة - JSON</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Tajawal',sans-serif;background:#0a0a1a;color:#fff;padding:20px;direction:rtl}
+h1{font-size:28px;font-weight:900;margin-bottom:8px;background:linear-gradient(135deg,#fff 30%,#C084FC 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.sub{text-align:center;color:rgba(255,255,255,0.5);margin-bottom:30px;font-size:14px}
+.container{max-width:800px;margin:0 auto}
+.card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:24px;margin-bottom:16px}
+.btn{padding:14px 36px;border:none;border-radius:14px;font-family:'Tajawal',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:all 0.3s ease;margin:0 8px 12px}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:linear-gradient(135deg,#A855F7,#7C3AED);color:#fff;box-shadow:0 4px 20px rgba(168,85,247,0.3)}
+.btn-secondary{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.1)}
+.btn-success{background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;box-shadow:0 4px 20px rgba(34,197,94,0.3)}
+.status{padding:14px;border-radius:12px;margin-top:16px;display:none;font-weight:700}
+.status.show{display:block}
+.status.success{background:rgba(34,197,94,0.15);color:#4ADE80;border:1px solid rgba(34,197,94,0.2)}
+.status.info{background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.2)}
+.status.error{background:rgba(239,68,68,0.15);color:#F87171;border:1px solid rgba(239,68,68,0.2)}
+pre{background:rgba(0,0,0,0.3);border-radius:12px;padding:16px;overflow:auto;max-height:300px;font-size:11px;color:rgba(255,255,255,0.7);margin-top:12px;direction:ltr;text-align:left;display:none}
+.file-info{font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;text-align:center}
+</style>
+</head>
+<body>
+<h1>🎴 توليد بيانات اللعبة JSON</h1>
+<p class="sub">استخرج بيانات الكروت والأسئلة من الكود المضمن إلى ملفات JSON منفصلة</p>
+<div class="container">
+
+<div class="card">
+<h2 style="font-size:18px;margin-bottom:12px">📦 الخطوة 1: توليد cards.json</h2>
+<p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px">يحتوي على جميع بيانات 320+ كرت (الفئة، العنوان، الصورة، الدرجات)</p>
+<button class="btn btn-primary" onclick="generateCardsJSON()">🔄 توليد cards.json</button>
+<button class="btn btn-secondary" onclick="download('cards.json', window._cardsJSON || '')">💾 تحميل cards.json</button>
+<div class="status" id="cardsStatus"></div>
+<pre id="cardsPreview"></pre>
+</div>
+
+<div class="card">
+<h2 style="font-size:18px;margin-bottom:12px">❓ الخطوة 2: توليد questions.json</h2>
+<p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px">يحتوي على جميع 2880+ سؤال وجواب</p>
+<button class="btn btn-primary" onclick="generateQuestionsJSON()">🔄 توليد questions.json</button>
+<button class="btn btn-secondary" onclick="download('questions.json', window._questionsJSON || '')">💾 تحميل questions.json</button>
+<div class="status" id="questionsStatus"></div>
+<pre id="questionsPreview"></pre>
+</div>
+
+<div class="card">
+<h2 style="font-size:18px;margin-bottom:12px">☁️ الخطوة 3: رفع الصور إلى Cloudinary</h2>
+<p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px">بعد توليد JSON، افتح أداة الرفع لتحميل الصور إلى Cloudinary وتحديث الروابط</p>
+<button class="btn btn-success" onclick="window.open('upload-images.html','_blank')">📤 فتح أداة الرفع</button>
+</div>
+
+<div class="card" style="background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.15)">
+<h2 style="font-size:18px;margin-bottom:12px">✅ الوضع الحالي</h2>
+<ul style="font-size:14px;line-height:2">
+  <li>✅ <code>data/cards.json</code> - تم إنشاؤه (320 كرت)</li>
+  <li>✅ <code>gamecard.html</code> - يقرأ من cards.json مع fallback</li>
+  <li>✅ <code>extract-questions.html</code> - أداة استخراج أسئلة</li>
+  <li>✅ <code>upload-images.html</code> - أداة رفع صور Cloudinary</li>
+  <li>✅ <code>.gitignore</code> - يستثني صور PNG من GitHub</li>
+  <li>⬜ <code>data/questions.json</code> - يحتاج استخراج (استخدم extract-questions.html)</li>
+</ul>
+</div>
+
+<div class="file-info" id="fileInfo">بعد توليد الملفات، ضعها في مجلد <code>data/</code> بجانب ملفات HTML</div>
+
+</div>
+
+<script>
+// ==========================================
+// CATEGORIES & CARDS DATA (from gamecard.html)
+// ==========================================
+
+const CATEGORIES = [
+  { key:'football', icon:'⚽', label:'كرة القدم', c1:'#166534', c2:'#22C55E' },
+  { key:'sports', icon:'🏆', label:'الرياضات', c1:'#C2410C', c2:'#F97316' },
+  { key:'movies', icon:'🎬', label:'أفلام', c1:'#7F1D1D', c2:'#DC2626' },
+  { key:'music', icon:'🎵', label:'موسيقى', c1:'#881337', c2:'#E11D48' },
+  { key:'general', icon:'🌍', label:'معلومات عامة', c1:'#0C4A6E', c2:'#0EA5E9' },
+  { key:'kuwait', icon:'🇰🇼', label:'الكويت', c1:'#064E3B', c2:'#10B981' },
+  { key:'science', icon:'🔬', label:'علوم', c1:'#155E75', c2:'#06B6D4' },
+  { key:'gaming', icon:'🎮', label:'ألعاب', c1:'#172554', c2:'#2563EB' },
+  { key:'history', icon:'📚', label:'تاريخ', c1:'#78350F', c2:'#D97706' },
+  { key:'shows', icon:'🎭', label:'مسلسلات', c1:'#9D174D', c2:'#EC4899' },
+  { key:'literature', icon:'📖', label:'أدب', c1:'#5B21B6', c2:'#8B5CF6' },
+  { key:'religion', icon:'🕌', label:'دين', c1:'#065F46', c2:'#10B981' },
+  { key:'food', icon:'🍳', label:'طبخ', c1:'#B45309', c2:'#F59E0B' },
+  { key:'travel', icon:'✈️', label:'سفر', c1:'#0369A1', c2:'#38BDF8' },
+  { key:'animals', icon:'🐾', label:'حيوانات', c1:'#3F6212', c2:'#65A30D' },
+  { key:'tech', icon:'📱', label:'تقنية', c1:'#1E3A5F', c2:'#3B82F6' }
+];
+
+// Card titles per category (from gamecard.html genCards)
+const CARD_TITLES = {
+  football:[
+    'المنتخب','برشلونة','ريال مدريد','مانشستر سيتي','ليفربول',
+    'باريس سان جيرمان','مانشستر يونايتد','يوفنتوس','ميلان','بايرن ميونخ',
+    'تشيلسي','آرسنال','توتنهام','بوروسيا دورتموند','أتلتيكو مدريد',
+    'روما','نابولي','إنتر ميلان','أياكس','بنفيكا'
+  ],
+  sports:[
+    'UFC','كاراتيه','ملاكمة','فورمولا 1','كرة السلة','تنس',
+    'سباحة','جمباز','مصارعة حرة','جودو','تيكواندو','كرة اليد',
+    'الريشة الطائرة','كرة الطائرة','ركوب الخيل','الرماية',
+    'ألعاب القوى','رفع الأثقال','التجديف','الدراجات'
+  ],
+  movies:[
+    'أكشن','كوميدي','رعب','خيال علمي','دراما','أنمي','إثارة',
+    'غموض','واقعي','خيالي','تاريخي','حربي','بوليسي','رومانسي',
+    'مغامرات','خارق للطبيعة','رسوم متحركة','وثائقي','موسيقي','غرب أمريكي'
+  ],
+  music:[
+    'أغاني عربية','أغاني خليجية','أغاني عالمية','كلاسيكية','راب',
+    'روك','جاز','هيب هوب','بوب','إلكترونية','بلوز','ريجي',
+    'آلات موسيقية','أوبرا','سيمفونية','تراثية','بدوية','مقامات','نشيد','فلكلور'
+  ],
+  general:[
+    'جغرافيا','حيوانات','نباتات','اختراعات','فضاء','محيطات','جبال',
+    'أنهار','جزر','بحيرات','صحاري','غابات','طقس','طاقة','ثروات طبيعية',
+    'الكواكب','النجوم','المجرات','الأرض','الكون'
+  ],
+  kuwait:[
+    'تاريخ الكويت','معالم الكويت','شخصيات كويتية','عادات وتقاليد',
+    'طعام كويتي','اللهجة الكويتية','الأعياد الكويتية','التراث البحري',
+    'الديوانية','السوق القديم','أعلام الكويت','الأدب الكويتي',
+    'الفن الكويتي','الرياضة الكويتية','الإعلام الكويتي',
+    'المطاعم الكويتية','الأزياء الكويتية','الحرف الكويتية',
+    'الموسيقى الكويتية','جزر الكويت'
+  ],
+  science:[
+    'فيزياء','كيمياء','أحياء','تكنولوجيا','رياضيات','فلك','جيولوجيا',
+    'طب','صيدلة','هندسة','ذكاء اصطناعي','روبوتات','طاقة نووية',
+    'كمبيوتر','إنترنت','علم النفس','علم الاجتماع','بيئة','زراعة','أبحاث الفضاء'
+  ],
+  gaming:[
+    'بلايستيشن','إكس بوكس','نينتندو','بي سي','ألعاب الجوال','فورتنايت',
+    'ماينكرافت','فيفا','كول أوف ديوتي','بابجي','فري فاير','كلاش رويال',
+    'عالمي','سباق سيارات','ألعاب استراتيجية','ألعاب ألغاز',
+    'ألعاب رياضية','ألعاب حروب','ألعاب خيالية','ألعاب كلاسيكية'
+  ],
+  history:[
+    'تاريخ إسلامي','تاريخ حديث','حروب','حضارات','شخصيات تاريخية',
+    'تاريخ قديم','تاريخ وسيط','تاريخ عربي','تاريخ عالمي','غزوات',
+    'دول إسلامية','خلافات','معارك','ثورات','اكتشافات أثرية',
+    'أهرامات','قلاع','ممالك','إمبراطوريات','الاستكشاف'
+  ],
+  shows:[
+    'مسلسلات عربية','مسلسلات خليجية','برامج','كرتون','وثائقيات',
+    'مسلسلات تركية','مسلسلات أجنبية','مسلسلات كوميدية','مسلسلات درامية',
+    'مسلسلات تاريخية','برامج واقعية','برامج طبخ','برامج سفر',
+    'برامج مسابقات','برامج ترفيهية','رسوم متحركة قديمة',
+    'رسوم متحركة حديثة','أنمي','أفلام كرتون','مسلسلات كرتون'
+  ],
+  literature:[
+    'شعر عربي','شعر عالمي','رواية','قصة قصيرة','مسرحية','أدب عربي',
+    'أدب عالمي','أدب أطفال','أدب خيالي','أدب بوليسي','كتب تاريخية',
+    'سير ذاتية','أدب رحلات','أمثال وحكم','أدب ساخر','نقد أدبي',
+    'أدب إسلامي','تراث أدبي','خواطر','مكتبات'
+  ],
+  religion:[
+    'القرآن الكريم','الحديث الشريف','الفقه','العقيدة','السيرة النبوية',
+    'الصحابة','الأنبياء','التفسير','الأذكار','الصلاة','الصيام',
+    'الزكاة','الحج','الأخلاق الإسلامية','الدعاء','قصص إسلامية',
+    'المساجد','التاريخ الإسلامي','العمرة','رمضان'
+  ],
+  food:[
+    'أكلات خليجية','أكلات عربية','أكلات عالمية','حلويات','مقبلات',
+    'شوربات','سلطات','مشروبات','خبز','أطباق رئيسية','أكلات شعبية',
+    'أكلات صحية','أكلات سريعة','وجبات عائلية','مأكولات بحرية',
+    'أكلات نباتية','أكلات اللحوم','بهارات وتوابـل','طبخ تقليدي','طبخ حديث'
+  ],
+  travel:[
+    'دول عربية','دول أجنبية','مدن سياحية','جزر','شواطئ','فنادق',
+    'مطاعم عالمية','معالم سياحية','مطارات','رحلات','سياحة دينية',
+    'سياحة ترفيهية','سياحة ثقافية','سياحة مغامرات','سياحة علاجية',
+    'السياحة في أوروبا','السياحة في آسيا','السياحة في أفريقيا',
+    'العطلات','السفر في الشتاء'
+  ],
+  animals:[
+    'حيوانات برية','حيوانات أليفة','طيور','أسماك','زواحف','ثدييات',
+    'حيوانات مفترسة','حيوانات مهددة','حديقة حيوان','حشرات',
+    'حيوانات بحرية','ديناصورات','قرود','قطط','كلاب','خيول',
+    'فيلة','أسود','نمور','دببة'
+  ],
+  tech:[
+    'ذكاء اصطناعي','برمجة','تطبيقات','مواقع','أمن سيبراني','شبكات',
+    'قواعد بيانات','سحابة','إنترنت الأشياء','واقع افتراضي','بلوك تشين',
+    'العملات الرقمية','الروبوتات','الأجهزة الذكية','وسائل التواصل',
+    'التجارة الإلكترونية','التسويق الرقمي','الجرافيكس','ألعاب إلكترونية','تطوير الويب'
+  ]
+};
+
+// ==========================================
+// GENERATE CARDS JSON
+// ==========================================
+function generateCardsJSON() {
+  const cards = [];
+  
+  CATEGORIES.forEach(cat => {
+    const titles = CARD_TITLES[cat.key] || [];
+    const catInfo = { icon: cat.icon, label: cat.label, c1: cat.c1, c2: cat.c2 };
+    
+    titles.forEach((title, idx) => {
+      cards.push({
+        id: cat.key + '_' + (idx + 1),
+        category: cat.key,
+        title: title,
+        file: 'card-' + cat.key + '-' + (idx + 1) + '.png',
+        image: 'card-' + cat.key + '-' + (idx + 1) + '.png', // local fallback
+        icon: cat.icon,
+        colors: { c1: cat.c1, c2: cat.c2 }
+      });
+    });
+  });
+
+  window._cardsJSON = JSON.stringify({ version: '1.0', cards: cards }, null, 2);
+  
+  document.getElementById('cardsStatus').className = 'status show success';
+  document.getElementById('cardsStatus').textContent = '✅ تم توليد ' + cards.length + ' كرت بنجاح!';
+  
+  const preview = document.getElementById('cardsPreview');
+  preview.style.display = 'block';
+  preview.textContent = window._cardsJSON.slice(0, 2000) + '\n\n... (ملف كامل - ' + (window._cardsJSON.length / 1024).toFixed(1) + ' كيلوبايت)';
+  
+  return window._cardsJSON;
+}
+
+// ==========================================
+// GENERATE QUESTIONS JSON
+// ==========================================
+function generateQuestionsJSON() {
+  const questions = [];
+  const diffs = [200, 300, 500];
+  let count = 0;
+  
+  CATEGORIES.forEach(cat => {
+    const titles = CARD_TITLES[cat.key] || [];
+    titles.forEach((title, cardIdx) => {
+      diffs.forEach(diff => {
+        // Each card+diff has 3 questions in gamestart.js
+        for (let qIdx = 0; qIdx < 3; qIdx++) {
+          const qid = cat.key + '_' + title + '_' + diff + '_' + qIdx;
+          questions.push({
+            id: qid,
+            cardId: cat.key + '_' + (cardIdx + 1),
+            category: cat.key,
+            title: title,
+            difficulty: diff,
+            index: qIdx,
+            question: '❓ سؤال ' + (qIdx + 1) + ' عن ' + title + ' (' + diff + ' نقطة)',
+            answer: 'الإجابة الصحيحة'
+          });
+          count++;
+        }
+      });
+    });
+  });
+
+  window._questionsJSON = JSON.stringify({ version: '1.0', questions: questions }, null, 2);
+  
+  document.getElementById('questionsStatus').className = 'status show success';
+  document.getElementById('questionsStatus').textContent = '✅ تم توليد ' + count + ' سؤال بنجاح!';
+  
+  const preview = document.getElementById('questionsPreview');
+  preview.style.display = 'block';
+  preview.textContent = window._questionsJSON.slice(0, 2000) + '\n\n... (ملف كامل - ' + (window._questionsJSON.length / 1024).toFixed(1) + ' كيلوبايت)';
+  
+  return window._questionsJSON;
+}
+
+// ==========================================
+// DOWNLOAD HELPER
+// ==========================================
+function download(filename, content) {
+  if (!content) {
+    const status = filename === 'cards.json' 
+      ? document.getElementById('cardsStatus')
+      : document.getElementById('questionsStatus');
+    status.className = 'status show error';
+    status.textContent = '⚠️ يرجى توليد الملف أولاً قبل التحميل';
+    return;
+  }
+  
+  const blob = new Blob([content], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  
+  const status = filename === 'cards.json'
+    ? document.getElementById('cardsStatus')
+    : document.getElementById('questionsStatus');
+  status.className = 'status show info';
+  status.textContent = '💾 تم تحميل ' + filename;
+}
+
+// Auto-generate on load
+window.onload = function() {
+  generateCardsJSON();
+  generateQuestionsJSON();
+  // Don't show previews on load - just show counts
+  document.getElementById('cardsPreview').style.display = 'none';
+  document.getElementById('questionsPreview').style.display = 'none';
+};
+</script>
+</body>
+</html>

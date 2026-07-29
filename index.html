@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="سؤال وجواب - لعبة الأسئلة العائلية الممتعة من الكويت">
+  <meta name="theme-color" content="#6A3BFF">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase SDK (Compat) for Google Auth -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+
+  <!--
+    ⚠️ IMPORTANT: Before opening this page, open generate-images.html
+    in your browser and click "توليد جميع الصور" to create all required
+    PNG image files (logo, banners, hero, buttons, favicon, etc.).
+    Without this step, images will show as broken placeholders.
+  -->
+  <title>سؤال وجواب - لعبة الأسئلة العائلية</title>
+</head>
+<body>
+
+  <!-- ========== LOADING SCREEN ========== -->
+  <div id="loading-screen" class="loading-screen" aria-hidden="true">
+    <div class="loading-content">
+      <img src="logo.png" onerror="this.src='logo.png'" alt="" class="loading-icon-img">
+      <div class="loading-text">جاري التحميل...</div>
+      <div class="loading-bar-container">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PAGE FADE WRAPPER ========== -->
+  <div id="page-content" class="page-fade">
+
+    <!-- ========== TOP SECTION ========== -->
+    <header class="top-section" id="topSection">
+
+      <div class="particles-bg" id="particlesBg" aria-hidden="true"></div>
+
+      <div class="container">
+
+        <!-- ========== NAV ========== -->
+        <nav class="navbar" id="navbar">
+          <img src="logo.png" onerror="this.src='logo.png'" alt="" class="nav-brand-icon">
+          <span class="nav-brand">سؤال وجواب</span>
+          <div class="nav-links" id="navLinks">
+            <a href="#about" class="nav-link">عن اللعبة</a>
+            <a href="#offers" class="nav-link">العروض</a>
+            <a href="#contact" class="nav-link">اتصل بنا</a>
+          </div>
+          <button class="nav-login-btn" id="navLoginBtn" aria-label="تسجيل الدخول">
+            <span class="nav-login-icon">👤</span>
+            <span class="nav-login-text" id="navLoginText">تسجيل الدخول</span>
+          </button>
+          <button class="nav-cta" onclick="document.getElementById('startGameBtn').click()">▶ العب الآن</button>
+          <button class="hamburger" id="hamburger" aria-label="القائمة">
+            <span></span><span></span><span></span>
+          </button>
+        </nav>
+
+        <!-- ========== TOP PROMOTIONAL BANNER ========== -->
+        <div class="top-banner-wrapper reveal-scale">
+          <img src="top-banner.png" onerror="this.src='logo.png'" alt="Soual Jawab" class="top-banner-img" id="topBannerImg">
+        </div>
+
+        <!-- ========== HERO CONTENT ========== -->
+        <div class="hero-content" id="heroContent">
+
+          <div class="logo-container">
+            <div class="logo-glow" aria-hidden="true"></div>
+            <img src="logo.png" onerror="this.src='logo.png'" alt="سؤال وجواب" class="logo-img floating" id="logoImg">
+          </div>
+
+          <h1 class="game-title reveal-bottom">سؤال وجواب</h1>
+          <p class="game-subtitle reveal-bottom">لعبة الأسئلة العائلية</p>
+          <div class="title-underline reveal-bottom"></div>
+
+          <!-- ========== 3 MAIN BUTTONS ========== -->
+          <div class="button-group reveal-bottom" id="buttonGroup">
+            <button class="btn btn-secondary btn-offer" id="offerBtn">
+              <span class="btn-icon"><img src="button-offers.png" onerror="this.src='logo.png'" alt="" class="btn-icon-img"></span>
+              <span class="btn-text">عروض</span>
+            </button>
+            <button class="btn btn-primary btn-start" id="startGameBtn">
+              <span class="btn-icon"><img src="button-start.png" onerror="this.src='logo.png'" alt="" class="btn-icon-img"></span>
+              <span class="btn-text">بدء اللعبة</span>
+            </button>
+            <button class="btn btn-secondary btn-new" id="newBtn">
+              <span class="btn-icon"><img src="button-new.png" onerror="this.src='logo.png'" alt="" class="btn-icon-img"></span>
+              <span class="btn-text">جديد</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="section-transition" aria-hidden="true"></div>
+    </header>
+
+    <!-- ========== LARGE PROMOTIONAL BANNER ========== -->
+    <section class="banner-section" id="offers">
+      <div class="container">
+        <div class="banner-wrapper reveal-scale">
+          <div class="banner-glow-border" aria-hidden="true"></div>
+          <div class="banner-content">
+            <img src="banner.png" onerror="this.src='logo.png'" alt="Soual Jawab Banner" class="banner-img" id="bannerImg">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== LARGE HERO IMAGE ========== -->
+    <section class="hero-section" id="about">
+      <div class="container">
+        <div class="hero-showcase reveal-scale">
+          <div class="hero-card">
+            <img src="hero-1920x1080.png" onerror="this.src='logo.png'" alt="Soual Jawab Game" class="hero-img" id="heroImg">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PROMO BANNERS ========== -->
+    <section class="promo-banners-section">
+      <div class="container">
+
+        <div class="promo-banner reveal-scale">
+          <div class="promo-banner-inner">
+            <img src="promo-banner-1.png" onerror="this.src='logo.png'" alt="Promotion 1" class="promo-banner-img" loading="lazy">
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer" id="contact">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <img src="logo.png" onerror="this.src='logo.png'" alt="" class="footer-logo-icon">
+            <h4 class="footer-brand-name">سؤال وجواب</h4>
+            <p class="footer-desc">لعبة الأسئلة العائلية الممتعة من الكويت إلى العالم</p>
+          </div>
+          <div class="footer-links-group">
+            <div class="footer-col">
+              <h5 class="footer-col-title">روابط سريعة</h5>
+              <a href="#" class="footer-link">الرئيسية</a>
+              <a href="#about" class="footer-link">عن اللعبة</a>
+              <a href="#offers" class="footer-link">العروض</a>
+            </div>
+            <div class="footer-col">
+              <h5 class="footer-col-title">الدعم</h5>
+              <a href="#" class="footer-link">الأسئلة الشائعة</a>
+              <a href="#" class="footer-link">سياسة الخصوصية</a>
+              <a href="#" class="footer-link">اتصل بنا</a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>© 2026 سؤال وجواب. جميع الحقوق محفوظة.</p>
+          <p>صُنع في 🇰🇼 الكويت</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ========== QUIZ GAME OVERLAY ========== -->
+    <div class="game-overlay" id="gameOverlay">
+      <div class="game-container" id="gameContainer">
+
+        <!-- ===== SCREEN 1: TEAM PICK ===== -->
+        <div class="game-screen team-pick-screen" id="gameTeamPick">
+
+          <!-- Logo -->
+          <div class="tp-logo-wrap">
+            <img src="logo.png" onerror="this.src='logo.png'" alt="" class="tp-logo">
+          </div>
+          <h2 class="tp-title">اختر فريقك وابدأ التحدي</h2>
+          <p class="tp-subtitle">كل فريق يختار ٣ بطاقات</p>
+
+          <!-- Category Tabs -->
+          <div class="tp-categories">
+            <button class="tp-cat-btn active" data-tpcat="football">⚽ قسم الكورة</button>
+            <button class="tp-cat-btn" data-tpcat="sports">🥊 الرياضات</button>
+            <button class="tp-cat-btn" data-tpcat="entertainment">🎬 الترفيه</button>
+            <button class="tp-cat-btn" data-tpcat="music">🎵 الموسيقى</button>
+          </div>
+
+          <!-- Cards Grid -->
+          <div class="tp-cards-grid" id="tpCardsGrid"></div>
+
+          <!-- Team Selection Areas -->
+          <div class="tp-teams">
+            <div class="tp-team-box tp-team-1" id="tpTeam1">
+              <div class="tp-team-header">
+                <span class="tp-team-badge team1-badge">1</span>
+                <span class="tp-team-label">الفريق الأول</span>
+                <span class="tp-team-count" id="tpTeam1Count">٠/٣</span>
+              </div>
+              <div class="tp-team-cards" id="tpTeam1Cards"></div>
+              <div class="tp-team-status" id="tpTeam1Status"></div>
+            </div>
+            <div class="tp-team-box tp-team-2" id="tpTeam2">
+              <div class="tp-team-header">
+                <span class="tp-team-badge team2-badge">2</span>
+                <span class="tp-team-label">الفريق الثاني</span>
+                <span class="tp-team-count" id="tpTeam2Count">٠/٣</span>
+              </div>
+              <div class="tp-team-cards" id="tpTeam2Cards"></div>
+              <div class="tp-team-status" id="tpTeam2Status"></div>
+            </div>
+          </div>
+
+          <!-- Confirm Button (hidden until both teams complete) -->
+          <button class="tp-confirm-btn" id="tpConfirmBtn" style="display:none">
+            ✓ اكتمل الاختيار - فتح الإعدادات
+          </button>
+        </div>
+
+        <!-- ===== SCREEN 2: GAME SETUP ===== -->
+        <div class="game-screen game-setup" id="gameSetup" style="display:none">
+          <div class="setup-logo-wrap">
+            <img src="logo.png" onerror="this.src='logo.png'" alt="" class="setup-logo">
+          </div>
+
+          <!-- Game Name -->
+          <div class="setup-field">
+            <label class="setup-label">اسم اللعبة</label>
+            <input type="text" class="setup-input" id="setupGameName" placeholder="اكتب اسم اللعبة" maxlength="30">
+          </div>
+
+          <!-- Two Teams Side by Side -->
+          <div class="setup-teams">
+            <!-- Team 1 -->
+            <div class="setup-team-box">
+              <div class="setup-team-title team1-color">الفريق الأول</div>
+              <div class="setup-team-preview" id="setupTeam1Preview">
+                <div class="setup-team-cards" id="setupTeam1Cards"></div>
+              </div>
+              <div class="setup-field">
+                <label class="setup-label setup-label-sm">اسم الفريق</label>
+                <input type="text" class="setup-input" id="setupTeam1Name" placeholder="اسم الفريق الأول" maxlength="20">
+              </div>
+              <div class="setup-players">
+                <label class="setup-label setup-label-sm">عدد اللاعبين</label>
+                <div class="setup-counter">
+                  <button class="setup-counter-btn" data-team="1" data-dir="minus">−</button>
+                  <span class="setup-counter-num" id="setupTeam1Players">1</span>
+                  <button class="setup-counter-btn" data-team="1" data-dir="plus">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Team 2 -->
+            <div class="setup-team-box">
+              <div class="setup-team-title team2-color">الفريق الثاني</div>
+              <div class="setup-team-preview" id="setupTeam2Preview">
+                <div class="setup-team-cards" id="setupTeam2Cards"></div>
+              </div>
+              <div class="setup-field">
+                <label class="setup-label setup-label-sm">اسم الفريق</label>
+                <input type="text" class="setup-input" id="setupTeam2Name" placeholder="اسم الفريق الثاني" maxlength="20">
+              </div>
+              <div class="setup-players">
+                <label class="setup-label setup-label-sm">عدد اللاعبين</label>
+                <div class="setup-counter">
+                  <button class="setup-counter-btn" data-team="2" data-dir="minus">−</button>
+                  <span class="setup-counter-num" id="setupTeam2Players">1</span>
+                  <button class="setup-counter-btn" data-team="2" data-dir="plus">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Start Button -->
+          <button class="setup-start-btn" id="setupStartBtn">
+            <span class="setup-start-icon">▶</span>
+            <span>بدء اللعبة</span>
+          </button>
+        </div>
+
+        <!-- ===== SCREEN 3: GAME READY (VS) ===== -->
+        <div class="game-screen game-ready" id="gameReady" style="display:none">
+
+          <!-- Game Name -->
+          <div class="gr-game-name" id="grGameName">سؤال وجواب</div>
+
+          <!-- Cinematic VS -->
+          <div class="gr-vs-container">
+            <div class="gr-vs-team gr-vs-left" id="grTeamLeft">
+              <div class="gr-vs-team-label">الفريق الأول</div>
+              <div class="gr-vs-team-name" id="grLeftName">الفريق الأول</div>
+              <div class="gr-vs-team-cards" id="grLeftCards"></div>
+              <div class="gr-vs-team-players" id="grLeftPlayers">٠/٣ لاعبين</div>
+            </div>
+
+            <div class="gr-vs-center">
+              <div class="gr-vs-glow" aria-hidden="true"></div>
+              <div class="gr-vs-letter">VS</div>
+              <div class="gr-vs-divider"></div>
+            </div>
+
+            <div class="gr-vs-team gr-vs-right" id="grTeamRight">
+              <div class="gr-vs-team-label">الفريق الثاني</div>
+              <div class="gr-vs-team-name" id="grRightName">الفريق الثاني</div>
+              <div class="gr-vs-team-cards" id="grRightCards"></div>
+              <div class="gr-vs-team-players" id="grRightPlayers">٠/٣ لاعبين</div>
+            </div>
+          </div>
+
+          <!-- Start Match Button -->
+          <button class="gr-start-btn" id="grStartBtn">
+            <span class="gr-start-bg" aria-hidden="true"></span>
+            <span class="gr-start-text">▶ بدء المباراة</span>
+          </button>
+        </div>
+
+        <!-- ===== SCREEN 4: QUIZ PLAY ===== -->
+        <div class="game-screen game-play" id="gamePlay" style="display:none">
+          <div class="game-topbar">
+            <div class="game-progress-text" id="gameProgress">١ / ١٠</div>
+            <div class="game-score-display" id="gameScoreDisplay">
+              <span class="game-score-icon">⭐</span>
+              <span id="gameScoreNum">٠</span>
+            </div>
+          </div>
+          <div class="game-progress-bar-container">
+            <div class="game-progress-bar" id="gameProgressBar"></div>
+          </div>
+          <div class="game-timer" id="gameTimer">
+            <svg class="game-timer-ring" width="60" height="60">
+              <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="4"/>
+              <circle class="game-timer-circle" id="gameTimerCircle" cx="30" cy="30" r="26" fill="none" stroke="#FFBF00" stroke-width="4" stroke-linecap="round" transform="rotate(-90 30 30)" stroke-dasharray="163.36" stroke-dashoffset="0"/>
+            </svg>
+            <span class="game-timer-text" id="gameTimerText">١٥</span>
+          </div>
+          <div class="game-question-area">
+            <div class="game-question-card" id="gameQuestionCard">
+              <p class="game-question-text" id="gameQuestionText">السؤال هنا</p>
+            </div>
+            <div class="game-answers" id="gameAnswers">
+              <button class="game-answer-btn" data-index="0">الخيار الأول</button>
+              <button class="game-answer-btn" data-index="1">الخيار الثاني</button>
+              <button class="game-answer-btn" data-index="2">الخيار الثالث</button>
+              <button class="game-answer-btn" data-index="3">الخيار الرابع</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SCREEN 5: RESULTS ===== -->
+        <div class="game-screen game-results" id="gameResults" style="display:none">
+          <div class="game-results-icon" id="gameResultsIcon">🏆</div>
+          <h2 class="game-results-title" id="gameResultsTitle">أحسنت!</h2>
+          <p class="game-results-subtitle" id="gameResultsSubtitle">نتيجة رائعة</p>
+          <div class="game-results-score">
+            <span class="game-results-score-num" id="gameResultsScore">٠</span>
+            <span class="game-results-score-label">من أصل ١٠</span>
+          </div>
+          <div class="game-results-stars" id="gameResultsStars">⭐</div>
+          <p class="game-results-message" id="gameResultsMessage">استمر في التحدي!</p>
+          <div class="game-results-buttons">
+            <button class="game-btn game-btn-primary" id="gamePlayAgainBtn">🔄 العب مرة أخرى</button>
+            <button class="game-btn game-btn-secondary" id="gameBackHomeBtn">🏠 العودة للرئيسية</button>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="game-close-btn" id="gameCloseBtn" aria-label="إغلاق">✕</button>
+    </div>
+
+  </div>
+
+  <!-- ========== MARKETPLACE OVERLAY (العروض & الجديد) ========== -->
+  <div class="mkt-overlay" id="mktOverlay">
+    <div class="mkt-container" id="mktContainer">
+
+      <!-- Header with Tabs -->
+      <div class="mkt-header">
+        <div class="mkt-tabs" id="mktTabs">
+          <button class="mkt-tab active" data-tab="offers" id="mktTabOffers">🎁 العروض</button>
+          <button class="mkt-tab" data-tab="new" id="mktTabNew">🆕 الجديد</button>
+        </div>
+        <button class="mkt-close-btn" id="mktCloseBtn" aria-label="إغلاق">✕</button>
+      </div>
+
+      <!-- ========== OFFERS TAB CONTENT (Under Maintenance) ========== -->
+      <div class="mkt-content mkt-offers" id="mktOffers">
+        <div class="mkt-maintenance">
+          <div class="mkt-maintenance-icon">🔧</div>
+          <h2 class="mkt-maintenance-title">قسم العروض قيد الصيانة</h2>
+          <p class="mkt-maintenance-desc">نعمل على تحسين تجربتك! سنعود قريباً بمفاجآت وعروض حصرية جديدة 🔥</p>
+          <div class="mkt-maintenance-bar-container">
+            <div class="mkt-maintenance-bar" id="mktMaintenanceBar"></div>
+          </div>
+          <p class="mkt-maintenance-eta">يقدر ينتهي قريباً... 🚀</p>
+          <button class="mkt-maintenance-btn" id="mktMaintenanceClose">العودة للرئيسية</button>
+        </div>
+      </div>
+
+      <!-- ========== NEW TAB CONTENT ========== -->
+      <div class="mkt-content mkt-new" id="mktNew" style="display:none">
+
+        <div class="mkt-new-header">
+          <h2 class="mkt-new-title">🆕 أحدث الإضافات</h2>
+          <p class="mkt-new-subtitle">محتوى جديد يضاف باستمرار لتحدي معرفتك</p>
+        </div>
+
+        <div class="mkt-new-grid" id="mktNewGrid">
+          <!-- New cards injected by JS -->
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========== AUTH OVERLAY (Login / Register) ========== -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-bg-blur" aria-hidden="true"></div>
+
+    <div class="auth-card" id="authCard">
+
+      <!-- Close Button -->
+      <button class="auth-close-btn" id="authCloseBtn" aria-label="إغلاق">✕</button>
+
+      <!-- Custom Premium Logo -->
+      <div class="auth-logo-wrapper">
+        <div class="auth-logo-icon">
+          <span class="auth-logo-q">؟</span>
+        </div>
+        <div class="auth-logo-text">
+          <span class="auth-logo-title">سؤال</span>
+          <span class="auth-logo-divider">&</span>
+          <span class="auth-logo-title">جواب</span>
+        </div>
+        <div class="auth-logo-sub">Family Quiz Platform</div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth="login" id="authTabLogin">تسجيل الدخول</button>
+        <button class="auth-tab" data-auth="register" id="authTabRegister">إنشاء حساب</button>
+      </div>
+
+      <!-- ===== LOGIN FORM ===== -->
+      <div class="auth-form" id="authFormLogin">
+
+        <!-- Social Buttons -->
+        <div class="auth-social">
+          <button class="auth-social-btn auth-google" id="authGoogleBtn">
+            <svg class="auth-social-icon" viewBox="0 0 48 48" width="20" height="20">
+              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+              <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+          <button class="auth-social-btn auth-discord" id="authDiscordBtn">
+            <svg class="auth-social-icon" viewBox="0 0 127.14 96.36" width="20" height="20" fill="#5865F2">
+              <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,56.61,122.09,32.76,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+            </svg>
+            <span>Continue with Discord</span>
+          </button>
+        </div>
+
+        <div class="auth-divider"><span>أو</span></div>
+
+        <!-- Email / Password Form -->
+        <div class="auth-input-group">
+          <label class="auth-label" for="authEmail">البريد الإلكتروني</label>
+          <input type="email" id="authEmail" class="auth-input" placeholder="your@email.com" autocomplete="email">
+        </div>
+
+        <div class="auth-input-group">
+          <label class="auth-label" for="authPassword">كلمة المرور</label>
+          <div class="auth-password-wrap">
+            <input type="password" id="authPassword" class="auth-input" placeholder="••••••••" autocomplete="current-password">
+            <button class="auth-password-toggle" id="authPassToggle" tabindex="-1" type="button" aria-label="إظهار كلمة المرور">👁️</button>
+          </div>
+        </div>
+
+        <div class="auth-options">
+          <label class="auth-remember">
+            <input type="checkbox" checked>
+            <span>تذكرني</span>
+          </label>
+          <button class="auth-forgot" id="authForgotBtn">نسيت كلمة المرور؟</button>
+        </div>
+
+        <button class="auth-submit-btn" id="authLoginSubmit">تسجيل الدخول</button>
+
+        <p class="auth-switch">
+          ليس لديك حساب؟
+          <button class="auth-switch-link" id="authSwitchToRegister">إنشاء حساب</button>
+        </p>
+      </div>
+
+      <!-- ===== REGISTER FORM ===== -->
+      <div class="auth-form" id="authFormRegister" style="display:none">
+
+        <div class="auth-input-group">
+          <label class="auth-label" for="authUsername">اسم المستخدم</label>
+          <input type="text" id="authUsername" class="auth-input" placeholder="@user" autocomplete="username">
+        </div>
+
+        <div class="auth-input-group">
+          <label class="auth-label" for="authRegEmail">البريد الإلكتروني</label>
+          <input type="email" id="authRegEmail" class="auth-input" placeholder="your@email.com" autocomplete="email">
+        </div>
+
+        <div class="auth-input-group">
+          <label class="auth-label" for="authRegPassword">كلمة المرور</label>
+          <div class="auth-password-wrap">
+            <input type="password" id="authRegPassword" class="auth-input" placeholder="••••••••" autocomplete="new-password">
+            <button class="auth-password-toggle" data-target="authRegPassword" tabindex="-1" type="button" aria-label="إظهار كلمة المرور">👁️</button>
+          </div>
+        </div>
+
+        <div class="auth-input-group">
+          <label class="auth-label" for="authRegConfirm">تأكيد كلمة المرور</label>
+          <div class="auth-password-wrap">
+            <input type="password" id="authRegConfirm" class="auth-input" placeholder="••••••••" autocomplete="new-password">
+            <button class="auth-password-toggle" data-target="authRegConfirm" tabindex="-1" type="button" aria-label="إظهار كلمة المرور">👁️</button>
+          </div>
+        </div>
+
+        <button class="auth-submit-btn" id="authRegisterSubmit">إنشاء الحساب</button>
+
+        <p class="auth-switch">
+          لديك حساب بالفعل؟
+          <button class="auth-switch-link" id="authSwitchToLogin">تسجيل الدخول</button>
+        </p>
+      </div>
+
+      <!-- ===== FORGOT PASSWORD FORM ===== -->
+      <div class="auth-form" id="authFormForgot" style="display:none">
+        <div class="auth-forgot-header">
+          <div class="auth-forgot-icon">🔑</div>
+          <h3 class="auth-forgot-title">نسيت كلمة المرور؟</h3>
+          <p class="auth-forgot-desc">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور</p>
+        </div>
+
+        <div class="auth-input-group">
+          <label class="auth-label" for="authForgotEmail">البريد الإلكتروني</label>
+          <input type="email" id="authForgotEmail" class="auth-input" placeholder="your@email.com" autocomplete="email">
+        </div>
+
+        <button class="auth-submit-btn" id="authForgotSubmit">إرسال رابط الاستعادة</button>
+
+        <p class="auth-switch">
+          تذكرت كلمة المرور؟
+          <button class="auth-switch-link" id="authBackToLogin">تسجيل الدخول</button>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

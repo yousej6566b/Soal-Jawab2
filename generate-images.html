@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>توليد صور سؤال وجواب</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Tajawal', sans-serif;
+  background: #f0f2f5;
+  padding: 20px;
+  direction: rtl;
+}
+h1 {
+  text-align: center;
+  color: #6A3BFF;
+  font-size: 32px;
+  margin-bottom: 8px;
+  font-weight: 900;
+}
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+.controls {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.btn-gen {
+  background: linear-gradient(135deg, #6A3BFF, #8E44FF);
+  color: white;
+  border: none;
+  padding: 14px 36px;
+  border-radius: 12px;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin: 0 8px 10px;
+}
+.btn-gen:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(106,59,255,0.3);
+}
+.btn-gen.all {
+  background: linear-gradient(135deg, #FFBF00, #FFD700);
+  color: #202124;
+  font-size: 20px;
+  padding: 16px 44px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  text-align: center;
+}
+.card canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  background: #fafafa;
+}
+.card-title {
+  font-weight: 800;
+  font-size: 16px;
+  color: #202124;
+  margin: 12px 0 4px;
+}
+.card-info {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 10px;
+}
+.btn-save {
+  background: #202124;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.btn-save:hover { transform: scale(1.05); }
+.status {
+  text-align: center;
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  display: none;
+}
+.status.show { display: block; }
+.status.success { background: #d4edda; color: #155724; }
+.status.info { background: #cce5ff; color: #004085; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.progress-bar { height: 6px; background: #e0e0e0; border-radius: 3px; margin: 10px auto; max-width: 400px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #6A3BFF, #8E44FF); border-radius: 3px; transition: width 0.3s ease; }
+</style>
+</head>
+<body>
+<h1>🎨 توليد صور سؤال وجواب</h1>
+<p class="subtitle">اضغط على الزر لتوليد جميع الصور بصيغة PNG، ثم احفظ كل صورة بالزر المخصص</p>
+
+<div class="controls">
+  <button class="btn-gen all" onclick="generateAll()">🔄 توليد جميع الصور</button>
+  <button class="btn-gen" onclick="downloadAll()">💾 تحميل واحدة تلو الأخرى</button>
+  <button class="btn-gen" onclick="downloadAllZip()">📦 تحميل الكل كملف ZIP</button>
+  <span class="btn-gen" style="background:#6A3BFF;padding:10px 20px;font-size:14px;cursor:default;opacity:0.7">⚡ أو اضغط Enter للتحميل التسلسلي</span>
+</div>
+<div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="grid" id="grid"></div>
+
+<div class="status" id="status"></div>
+
+<script>
+// ==========================================
+// COLOR PALETTE
+// ==========================================
+const COLORS = {
+  primary: '#6A3BFF',
+  primaryDark: '#4A1FCC',
+  primaryLight: '#8E44FF',
+  secondary: '#8E44FF',
+  accent: '#FFBF00',
+  accentDark: '#E6A800',
+  white: '#FFFFFF',
+  dark: '#202124',
+  darkBg: '#1a0a3e',
+  gray500: '#9AA0A6',
+  navyBg: '#0D1B2A',
+  navyMid: '#1B3A5C',
+  navyLight: '#2E5090',
+  deepPurple: '#1A0A2E',
+  midPurple: '#2D1B69',
+  cardBg: 'rgba(255,255,255,0.05)',
+  cardStroke: 'rgba(255,255,255,0.08)',
+};
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+function setupCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
+  return { c, ctx };
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawGradient(ctx, x, y, w, h, stops) {
+  const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+  stops.forEach(s => grad.addColorStop(s[0], s[1]));
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawCircle(ctx, cx, cy, r, color) {
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+// ==========================================
+// LOGO (200x200, transparent bg)
+// ==========================================
+function generateLogo() {
+  const { c, ctx } = setupCanvas(200, 200);
+
+  // Outer glow
+  const glow = ctx.createRadialGradient(100, 100, 0, 100, 100, 100);
+  glow.addColorStop(0, 'rgba(255,191,0,0.3)');
+  glow.addColorStop(1, 'rgba(106,59,255,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(100, 100, 95, 0, Math.PI*2);
+  ctx.fill();
+
+  // Main circle
+  const bg = ctx.createRadialGradient(60, 60, 0, 100, 100, 90);
+  bg.addColorStop(0, '#8E44FF');
+  bg.addColorStop(1, '#6A3BFF');
+  ctx.fillStyle = bg;
+  ctx.beginPath();
+  ctx.arc(100, 100, 85, 0, Math.PI*2);
+  ctx.fill();
+
+  // Ring
+  const ring = ctx.createLinearGradient(15, 15, 185, 185);
+  ring.addColorStop(0, '#FFBF00');
+  ring.addColorStop(0.5, '#8E44FF');
+  ring.addColorStop(1, '#FFBF00');
+  ctx.strokeStyle = ring;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(100, 100, 85, 0, Math.PI*2);
+  ctx.stroke();
+
+  // Inner highlight
+  ctx.beginPath();
+  ctx.ellipse(75, 70, 45, 30, -0.3, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fill();
+
+  // Shadow
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 4;
+
+  // ?! text
+  ctx.fillStyle = 'white';
+  ctx.font = '900 70px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(106,59,255,0.5)';
+  ctx.shadowBlur = 12;
+  ctx.fillText('؟!', 100, 108);
+
+  // Gold dots
+  ctx.shadowBlur = 0;
+  drawCircle(ctx, 140, 55, 5, '#FFBF00');
+  ctx.globalAlpha = 0.5;
+  drawCircle(ctx, 55, 145, 3.5, '#FFBF00');
+  ctx.globalAlpha = 1;
+
+  return c;
+}
+
+// ==========================================
+// TOP BANNER (1200x200)
+// ==========================================
+function generateTopBanner() {
+  const { c, ctx } = setupCanvas(1200, 200);
+
+  // Background
+  drawGradient(ctx, 0, 0, 1200, 200, [
+    [0, '#6A3BFF'], [0.5, '#8E44FF'], [1, '#5228E0']
+  ]);
+
+  // Decorative circles
+  drawCircle(ctx, 150, 100, 80, 'rgba(255,191,0,0.06)');
+  drawCircle(ctx, 1050, 100, 60, 'rgba(255,255,255,0.04)');
+
+  // Star
+  ctx.fillStyle = 'rgba(255,191,0,0.3)';
+  drawStar(ctx, 1100, 65, 12, 6);
+
+  // Text
+  ctx.fillStyle = 'white';
+  ctx.font = '900 32px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.2)';
+  ctx.shadowBlur = 10;
+  ctx.fillText('أهلاً بكم في عالم المعرفة والتحدي', 600, 90);
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '500 17px Tajawal, sans-serif';
+  ctx.fillText('استعدوا لتجربة عائلية ممتعة مع سؤال وجواب', 600, 135);
+
+  // Question mark decoration
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.font = '900 80px Tajawal, sans-serif';
+  ctx.fillText('؟', 1050, 130);
+
+  return c;
+}
+
+function drawStar(ctx, cx, cy, r, points) {
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const radius = i % 2 === 0 ? r : r * 0.4;
+    const angle = (i * Math.PI) / points - Math.PI / 2;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ==========================================
+// BANNER (1200x400)
+// ==========================================
+function generateBanner() {
+  const { c, ctx } = setupCanvas(1200, 400);
+
+  // Background
+  drawGradient(ctx, 0, 0, 1200, 400, [
+    [0, '#6A3BFF'], [0.5, '#8E44FF'], [1, '#5228E0']
+  ]);
+
+  // Dots pattern
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  for (let x = 10; x < 1200; x += 25) {
+    for (let y = 10; y < 400; y += 25) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  // Decorative circles
+  drawCircle(ctx, 1000, 50, 200, 'rgba(255,191,0,0.06)');
+  drawCircle(ctx, 200, 350, 150, 'rgba(255,255,255,0.04)');
+  drawCircle(ctx, 600, 200, 250, 'rgba(142,68,255,0.05)');
+
+  // Badge
+  roundRect(ctx, 80, 70, 130, 38, 19);
+  const badgeGrad = ctx.createLinearGradient(80, 70, 210, 108);
+  badgeGrad.addColorStop(0, '#FFBF00');
+  badgeGrad.addColorStop(1, '#FFD700');
+  ctx.fillStyle = badgeGrad;
+  ctx.fill();
+  ctx.fillStyle = '#202124';
+  ctx.font = '700 16px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowBlur = 0;
+  ctx.fillText('🔥 عرض خاص', 145, 90);
+
+  // Title
+  ctx.fillStyle = 'white';
+  ctx.font = '900 44px Tajawal, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.shadowColor = 'rgba(0,0,0,0.2)';
+  ctx.shadowBlur = 8;
+  ctx.fillText('أسبوع العائلة الممتعة', 1100, 160);
+
+  // Description
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.font = '500 18px Tajawal, sans-serif';
+  ctx.fillText('احصل على باقة الأسئلة المميزة مجاناً لفترة محدودة!', 1100, 210);
+
+  // CTA Button
+  roundRect(ctx, 80, 250, 180, 50, 25);
+  const ctaGrad = ctx.createLinearGradient(80, 250, 260, 300);
+  ctaGrad.addColorStop(0, '#FFBF00');
+  ctaGrad.addColorStop(1, '#FFD700');
+  ctx.fillStyle = ctaGrad;
+  ctx.fill();
+  ctx.fillStyle = '#202124';
+  ctx.font = '700 16px Tajawal, sans-serif';
+  ctx.fillText('اطلع على العرض', 170, 276);
+
+  // Question marks decoration
+  ctx.fillStyle = 'rgba(255,255,255,0.07)';
+  ctx.font = '900 120px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('?', 950, 140);
+  ctx.font = '900 80px Tajawal, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.fillText('؟', 1050, 240);
+
+  // Stars
+  ctx.fillStyle = 'rgba(255,191,0,0.4)';
+  drawStar(ctx, 1080, 320, 10, 5);
+  ctx.globalAlpha = 0.3;
+  drawStar(ctx, 780, 290, 7, 5);
+  ctx.globalAlpha = 1;
+
+  return c;
+}
+
+// ==========================================
+// HERO (1920x1080)
+// ==========================================
+function generateHero() {
+  const { c, ctx } = setupCanvas(1920, 1080);
+
+  // Background
+  drawGradient(ctx, 0, 0, 1920, 1080, [
+    [0, '#1a0a3e'], [0.3, '#3a1a8a'], [0.6, '#6A3BFF'], [1, '#8E44FF']
+  ]);
+
+  // Grid pattern
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < 1920; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, 1080);
+    ctx.stroke();
+  }
+  for (let y = 0; y < 1080; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(1920, y);
+    ctx.stroke();
+  }
+
+  // Floating orbs
+  drawCircle(ctx, 300, 250, 200, 'rgba(255,191,0,0.05)');
+  drawCircle(ctx, 1600, 400, 250, 'rgba(142,68,255,0.07)');
+  drawCircle(ctx, 900, 800, 300, 'rgba(255,191,0,0.03)');
+
+  // Main card mockup
+  roundRect(ctx, 300, 180, 1320, 620, 32);
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Side panel
+  roundRect(ctx, 330, 210, 400, 560, 24);
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.fill();
+
+  // Content panel
+  roundRect(ctx, 760, 210, 830, 560, 24);
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.fill();
+
+  // Mini cards
+  roundRect(ctx, 770, 230, 240, 160, 16);
+  ctx.fillStyle = 'rgba(106,59,255,0.3)';
+  ctx.fill();
+  roundRect(ctx, 1030, 230, 240, 160, 16);
+  ctx.fillStyle = 'rgba(255,191,0,0.15)';
+  ctx.fill();
+  roundRect(ctx, 1290, 230, 240, 160, 16);
+  ctx.fillStyle = 'rgba(142,68,255,0.2)';
+  ctx.fill();
+
+  // Progress bars
+  for (let i = 0; i < 3; i++) {
+    const y = 420 + i * 30;
+    roundRect(ctx, 770, y, 500, 12, 6);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fill();
+  }
+  roundRect(ctx, 770, 420, 350, 12, 6);
+  ctx.fillStyle = '#FFBF00';
+  ctx.globalAlpha = 0.7;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  roundRect(ctx, 770, 450, 280, 12, 6);
+  ctx.fillStyle = 'rgba(106,59,255,0.6)';
+  ctx.fill();
+  roundRect(ctx, 770, 480, 420, 12, 6);
+  ctx.fillStyle = 'rgba(142,68,255,0.6)';
+  ctx.fill();
+
+  // Question rows
+  for (let i = 0; i < 3; i++) {
+    roundRect(ctx, 770, 530 + i * 70, 800, 60, 12);
+    ctx.fillStyle = i === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.03)';
+    ctx.fill();
+  }
+
+  // Question marks on side panel
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.font = '900 60px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('?', 530, 320);
+  ctx.font = '900 50px Tajawal, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fillText('؟', 530, 400);
+  ctx.font = '900 70px Tajawal, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.fillText('!', 530, 470);
+
+  // Labels
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '700 18px Tajawal, sans-serif';
+  ctx.fillText('سؤال وجواب', 1180, 570);
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '500 14px Tajawal, sans-serif';
+  ctx.fillText('اختبر معلوماتك مع العائلة', 1180, 600);
+
+  // Play button
+  drawCircle(ctx, 960, 760, 40, 'rgba(255,191,0,0.12)');
+  ctx.strokeStyle = 'rgba(255,191,0,0.35)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(960, 760, 40, 0, Math.PI*2);
+  ctx.stroke();
+  ctx.fillStyle = '#FFBF00';
+  ctx.beginPath();
+  ctx.moveTo(950, 745);
+  ctx.lineTo(950, 775);
+  ctx.lineTo(975, 760);
+  ctx.closePath();
+  ctx.fill();
+
+  // Badge
+  roundRect(ctx, 1460, 210, 100, 32, 16);
+  ctx.fillStyle = '#FFBF00';
+  ctx.fill();
+  ctx.fillStyle = '#202124';
+  ctx.font = '700 14px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('جديد', 1510, 232);
+
+  // Bottom overlay
+  const overlay = ctx.createLinearGradient(0, 800, 0, 1080);
+  overlay.addColorStop(0, 'transparent');
+  overlay.addColorStop(1, 'rgba(0,0,0,0.6)');
+  ctx.fillStyle = overlay;
+  ctx.fillRect(0, 800, 1920, 280);
+
+  return c;
+}
+
+// ==========================================
+// PROMO BANNER 1 (1200x400)
+// ==========================================
+function generatePromo1() {
+  const { c, ctx } = setupCanvas(1200, 400);
+
+  drawGradient(ctx, 0, 0, 1200, 400, [
+    [0, '#1a0a3e'], [0.4, '#3a1a8a'], [1, '#6A3BFF']
+  ]);
+
+  drawCircle(ctx, 900, 100, 180, 'rgba(255,191,0,0.04)');
+  drawCircle(ctx, 200, 300, 120, 'rgba(255,255,255,0.03)');
+
+  // Card
+  roundRect(ctx, 80, 80, 500, 240, 20);
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = 'white';
+  ctx.font = '900 36px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 8;
+  ctx.fillText('تحدي العائلة الكبير', 330, 148);
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '500 16px Tajawal, sans-serif';
+  ctx.fillText('أكثر من 500 سؤال في مختلف المجالات', 330, 190);
+
+  // Button
+  roundRect(ctx, 200, 230, 260, 50, 25);
+  ctx.fillStyle = '#FFBF00';
+  ctx.fill();
+  ctx.fillStyle = '#202124';
+  ctx.font = '700 16px Tajawal, sans-serif';
+  ctx.fillText('ابدأ التحدي الآن', 330, 256);
+
+  // Decorative question marks
+  ctx.fillStyle = 'rgba(255,255,255,0.07)';
+  ctx.font = '900 140px Tajawal, sans-serif';
+  ctx.fillText('؟', 950, 170);
+  ctx.font = '900 80px Tajawal, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fillText('!', 1030, 290);
+
+  // Dots
+  drawCircle(ctx, 1050, 320, 3.5, 'rgba(255,191,0,0.4)');
+  drawCircle(ctx, 980, 340, 2.5, 'rgba(255,191,0,0.3)');
+  drawCircle(ctx, 1100, 290, 4, 'rgba(255,191,0,0.2)');
+
+  return c;
+}
+
+// ==========================================
+// PROMO BANNER 2 (1200x400)
+// ==========================================
+function generatePromo2() {
+  const { c, ctx } = setupCanvas(1200, 400);
+
+  drawGradient(ctx, 0, 0, 1200, 400, [
+    [0, '#0D1B2A'], [0.5, '#1B3A5C'], [1, '#2E5090']
+  ]);
+
+  // Right panel
+  roundRect(ctx, 620, 60, 500, 280, 20);
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // List items
+  for (let i = 0; i < 3; i++) {
+    const y = 100 + i * 75;
+    roundRect(ctx, 660, y, 420, 60, 12);
+    ctx.fillStyle = i === 0 ? 'rgba(255,255,255,0.04)' : i === 1 ? 'rgba(106,59,255,0.2)' : 'rgba(255,191,0,0.15)';
+    ctx.fill();
+  }
+
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '500 12px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('النتائج', 870, 88);
+  ctx.fillStyle = 'white';
+  ctx.font = '700 18px Tajawal, sans-serif';
+  ctx.fillText('نظام النقاط والجوائز', 870, 218);
+  ctx.fillStyle = '#FFBF00';
+  ctx.fillText('تحديات يومية', 870, 293);
+
+  // Left text
+  ctx.fillStyle = 'white';
+  ctx.font = '900 44px Tajawal, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 8;
+  ctx.fillText('تنافس مع', 1100, 160);
+  ctx.fillText('عائلتك الآن', 1100, 215);
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '500 16px Tajawal, sans-serif';
+  ctx.fillText('جوائز حصرية ومكافآت يومية', 1100, 268);
+
+  // Button
+  roundRect(ctx, 180, 300, 180, 46, 23);
+  ctx.fillStyle = '#FFBF00';
+  ctx.fill();
+  ctx.fillStyle = '#202124';
+  ctx.font = '700 15px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('سجل الآن', 270, 324);
+
+  return c;
+}
+
+// ==========================================
+// PROMO BANNER 3 (1200x400)
+// ==========================================
+function generatePromo3() {
+  const { c, ctx } = setupCanvas(1200, 400);
+
+  drawGradient(ctx, 0, 0, 1200, 400, [
+    [0, '#1A0A2E'], [0.5, '#2D1B69'], [1, '#4A2B8E']
+  ]);
+
+  drawCircle(ctx, 350, 200, 150, 'rgba(255,191,0,0.03)');
+  drawCircle(ctx, 950, 180, 100, 'rgba(142,68,255,0.05)');
+
+  // Cards
+  const cards = [
+    { x: 100, icon: '📚', title: 'تاريخ', count: '١٢٠ سؤال' },
+    { x: 290, icon: '🌍', title: 'جغرافيا', count: '٩٠ سؤال' },
+    { x: 480, icon: '🔬', title: 'علوم', count: '١١٠ سؤال' }
+  ];
+
+  cards.forEach(card => {
+    roundRect(ctx, card.x, 100, 160, 200, 16);
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,191,0,0.4)';
+    ctx.font = '40px Tajawal, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(card.icon, card.x + 80, 160);
+
+    ctx.fillStyle = 'white';
+    ctx.font = '700 14px Tajawal, sans-serif';
+    ctx.fillText(card.title, card.x + 80, 210);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '500 12px Tajawal, sans-serif';
+    ctx.fillText(card.count, card.x + 80, 235);
+  });
+
+  // Right text
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'white';
+  ctx.font = '900 34px Tajawal, sans-serif';
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 6;
+  ctx.fillText('مكتبة ضخمة', 1120, 170);
+  ctx.fillText('من الأسئلة', 1120, 215);
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '500 15px Tajawal, sans-serif';
+  ctx.fillText('في التاريخ، الجغرافيا،', 1120, 260);
+  ctx.fillText('العلوم، الأدب والتراث', 1120, 285);
+
+  return c;
+}
+
+// ==========================================
+// PROMO BANNER 4 (1200x400)
+// ==========================================
+function generatePromo4() {
+  const { c, ctx } = setupCanvas(1200, 400);
+
+  drawGradient(ctx, 0, 0, 1200, 400, [
+    [0, '#0F3460'], [0.5, '#1A5276'], [1, '#2E86C1']
+  ]);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'white';
+  ctx.font = '900 44px Tajawal, sans-serif';
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 8;
+  ctx.fillText('تحديات يومية', 600, 130);
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '500 18px Tajawal, sans-serif';
+  ctx.fillText('تحدي جديد كل يوم مع فرصة للفوز بجوائز قيمة', 600, 185);
+
+  // Buttons
+  roundRect(ctx, 420, 220, 200, 50, 25);
+  ctx.fillStyle = '#FFBF00';
+  ctx.fill();
+  ctx.fillStyle = '#202124';
+  ctx.font = '700 16px Tajawal, sans-serif';
+  ctx.fillText('تحدي اليوم', 520, 246);
+
+  roundRect(ctx, 640, 220, 200, 50, 25);
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = 'white';
+  ctx.fillText('الجوائز', 740, 246);
+
+  drawCircle(ctx, 150, 300, 3, 'rgba(255,191,0,0.3)');
+  drawCircle(ctx, 1050, 100, 4, 'rgba(255,191,0,0.25)');
+  drawCircle(ctx, 1100, 150, 2, 'rgba(255,191,0,0.2)');
+
+  return c;
+}
+
+// ==========================================
+// PROMO BANNER 5 (1200x400)
+// ==========================================
+function generatePromo5() {
+  const { c, ctx } = setupCanvas(1200, 400);
+
+  drawGradient(ctx, 0, 0, 1200, 400, [
+    [0, '#6A3BFF'], [0.5, '#8E44FF'], [1, '#5228E0']
+  ]);
+
+  drawCircle(ctx, 900, 350, 250, 'rgba(255,191,0,0.04)');
+  drawCircle(ctx, 200, 50, 150, 'rgba(255,255,255,0.03)');
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'white';
+  ctx.font = '900 48px Tajawal, sans-serif';
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 8;
+  ctx.fillText('انضم إلى آلاف اللاعبين', 600, 140);
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '500 18px Tajawal, sans-serif';
+  ctx.fillText('حمّل التطبيق الآن واستمتع بأوقات ممتعة مع العائلة', 600, 195);
+
+  // Buttons
+  roundRect(ctx, 380, 240, 200, 56, 28);
+  ctx.fillStyle = '#FFBF00';
+  ctx.fill();
+  ctx.fillStyle = '#202124';
+  ctx.font = '800 18px Tajawal, sans-serif';
+  ctx.fillText('حمّل التطبيق', 480, 270);
+
+  roundRect(ctx, 620, 240, 200, 56, 28);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = 'white';
+  ctx.fillText('اعرف المزيد', 720, 270);
+
+  // Decorative
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.font = '900 100px Tajawal, sans-serif';
+  ctx.fillText('!', 1050, 130);
+  ctx.font = '900 70px Tajawal, sans-serif';
+  ctx.fillText('؟', 80, 330);
+
+  ctx.globalAlpha = 0.3;
+  drawStar(ctx, 1100, 310, 10, 5);
+  ctx.globalAlpha = 1;
+
+  return c;
+}
+
+// ==========================================
+// BUTTON ICONS
+// ==========================================
+function generateButtonStart() {
+  const { c, ctx } = setupCanvas(100, 100);
+  drawGradient(ctx, 0, 0, 100, 100, [[0, '#FFBF00'], [0.5, '#FFD700'], [1, '#E6A800']]);
+  roundRect(ctx, 0, 0, 100, 100, 20);
+  ctx.fill();
+  ctx.fillStyle = '#202124';
+  ctx.font = '40px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('▶', 52, 52);
+  return c;
+}
+
+function generateButtonOffers() {
+  const { c, ctx } = setupCanvas(100, 100);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  roundRect(ctx, 0, 0, 100, 100, 20);
+  ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.font = '40px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🎁', 52, 52);
+  return c;
+}
+
+function generateButtonNew() {
+  const { c, ctx } = setupCanvas(100, 100);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  roundRect(ctx, 0, 0, 100, 100, 20);
+  ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.font = '40px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🆕', 52, 52);
+  return c;
+}
+
+// ==========================================
+// CARD IMAGES (22 cards)
+// ==========================================
+
+function generateCardImage(index, label, bgStops, icon, accentColor) {
+  const { c, ctx } = setupCanvas(400, 280);
+
+  // Background
+  const grad = ctx.createLinearGradient(0, 0, 400, 280);
+  bgStops.forEach(s => grad.addColorStop(s[0], s[1]));
+  ctx.fillStyle = grad;
+  roundRect(ctx, 0, 0, 400, 280, 16);
+  ctx.fill();
+
+  // Pattern overlay
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  for (let x = 15; x < 400; x += 30) {
+    for (let y = 15; y < 280; y += 30) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Glow orb
+  const glow = ctx.createRadialGradient(350, 50, 0, 350, 50, 180);
+  glow.addColorStop(0, 'rgba(255,255,255,0.06)');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, 400, 280);
+
+  // Bottom gradient overlay
+  const overlay = ctx.createLinearGradient(0, 140, 0, 280);
+  overlay.addColorStop(0, 'transparent');
+  overlay.addColorStop(1, 'rgba(0,0,0,0.4)');
+  ctx.fillStyle = overlay;
+  roundRect(ctx, 0, 140, 400, 140, 0);
+  ctx.fill();
+
+  // Large icon/emoji
+  ctx.font = '80px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = accentColor || 'rgba(0,0,0,0.2)';
+  ctx.shadowBlur = 15;
+  ctx.fillText(icon, 200, 120);
+
+  // Question marks decoration
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.font = '60px Tajawal, sans-serif';
+  ctx.fillText('؟', 60, 240);
+  ctx.font = '40px Tajawal, sans-serif';
+  ctx.fillText('!', 80, 215);
+
+  // Label at bottom
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.font = '700 18px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 6;
+  ctx.fillText(label, 200, 210);
+
+  // Small accent line
+  ctx.shadowBlur = 0;
+  const lineGrad = ctx.createLinearGradient(140, 235, 260, 235);
+  lineGrad.addColorStop(0, 'transparent');
+  lineGrad.addColorStop(0.5, accentColor || 'rgba(255,191,0,0.4)');
+  lineGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = lineGrad;
+  roundRect(ctx, 140, 233, 120, 2, 1);
+  ctx.fill();
+
+  // Accent dot
+  ctx.fillStyle = accentColor || 'rgba(255,191,0,0.3)';
+  ctx.beginPath();
+  ctx.arc(350, 30, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Border
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, 0, 0, 400, 280, 16);
+  ctx.stroke();
+
+  return c;
+}
+
+// Card generators
+function generateCard01() { return generateCardImage(1, 'أفلام أكشن', [[0,'#1a0a3e'],[0.5,'#6A3BFF'],[1,'#8E44FF']], '🎬', 'rgba(106,59,255,0.4)'); }
+function generateCard02() { return generateCardImage(2, 'أفلام رعب', [[0,'#0d0d0d'],[0.5,'#1a1a2e'],[1,'#16213e']], '👻', 'rgba(100,100,100,0.4)'); }
+function generateCard03() { return generateCardImage(3, 'أفلام كوميدية', [[0,'#1a3a1a'],[0.5,'#2d5a2d'],[1,'#4a7a4a']], '😂', 'rgba(76,175,80,0.4)'); }
+function generateCard04() { return generateCardImage(4, 'أفلام كرتون', [[0,'#1a2a4a'],[0.5,'#3a5a8a'],[1,'#5a8aba']], '🧸', 'rgba(66,165,245,0.4)'); }
+function generateCard05() { return generateCardImage(5, 'كرة القدم', [[0,'#0d2a0d'],[0.5,'#1a4a1a'],[1,'#2d6a2d']], '⚽', 'rgba(76,175,80,0.4)'); }
+function generateCard06() { return generateCardImage(6, 'كرة السلة', [[0,'#1a0a0a'],[0.5,'#4a1a1a'],[1,'#7a2a2a']], '🏀', 'rgba(244,67,54,0.4)'); }
+function generateCard07() { return generateCardImage(7, 'الفورمولا', [[0,'#0a0a1a'],[0.5,'#1a1a3a'],[1,'#2a2a5a']], '🏎️', 'rgba(156,39,176,0.4)'); }
+function generateCard08() { return generateCardImage(8, 'المصارعة', [[0,'#1a0a0a'],[0.5,'#3a1a1a'],[1,'#5a2a2a']], '🤼', 'rgba(255,87,34,0.4)'); }
+function generateCard09() { return generateCardImage(9, 'أغاني عربية', [[0,'#1a0a1a'],[0.5,'#3a1a3a'],[1,'#5a2a5a']], '🎤', 'rgba(233,30,99,0.4)'); }
+function generateCard10() { return generateCardImage(10, 'أغاني خليجية', [[0,'#0a1a0a'],[0.5,'#1a3a1a'],[1,'#2a5a2a']], '🎶', 'rgba(0,200,83,0.4)'); }
+function generateCard11() { return generateCardImage(11, 'أغاني عالمية', [[0,'#0a0a1a'],[0.5,'#1a1a4a'],[1,'#2a2a6a']], '🌍', 'rgba(33,150,243,0.4)'); }
+function generateCard12() { return generateCardImage(12, 'ألعاب الفيديو', [[0,'#1a0a2a'],[0.5,'#3a1a5a'],[1,'#5a2a8a']], '🎮', 'rgba(156,39,176,0.4)'); }
+function generateCard13() { return generateCardImage(13, 'معلومات عامة', [[0,'#0a1a2a'],[0.5,'#1a3a5a'],[1,'#2a5a8a']], '🌍', 'rgba(3,169,244,0.4)'); }
+function generateCard14() { return generateCardImage(14, 'الكويت', [[0,'#0a1a0a'],[0.5,'#1a3a1a'],[1,'#2a5a2a']], '🇰🇼', 'rgba(76,175,80,0.4)'); }
+function generateCard15() { return generateCardImage(15, 'تاريخ', [[0,'#1a0a00'],[0.5,'#3a1a00'],[1,'#5a2a00']], '📚', 'rgba(255,152,0,0.4)'); }
+function generateCard16() { return generateCardImage(16, 'علوم', [[0,'#001a1a'],[0.5,'#003a3a'],[1,'#005a5a']], '🔬', 'rgba(0,188,212,0.4)'); }
+function generateCard17() { return generateCardImage(17, 'عرض الأسبوع', [[0,'#2a1a00'],[0.5,'#5a2a00'],[1,'#8a4a00']], '🎁', 'rgba(255,191,0,0.5)'); }
+function generateCard18() { return generateCardImage(18, 'باقة التحدي', [[0,'#1a0a2a'],[0.5,'#3a1a5a'],[1,'#6a2a8a']], '⚡', 'rgba(106,59,255,0.4)'); }
+function generateCard19() { return generateCardImage(19, 'أسئلة VIP', [[0,'#0a0a1a'],[0.5,'#1a1a3a'],[1,'#2a2a5a']], '⭐', 'rgba(255,215,0,0.5)'); }
+function generateCard20() { return generateCardImage(20, 'تحدي رمضان', [[0,'#0a001a'],[0.5,'#1a003a'],[1,'#2a005a']], '🌙', 'rgba(156,39,176,0.4)'); }
+function generateCard21() { return generateCardImage(21, 'أسئلة كويتية', [[0,'#0a1a0a'],[0.5,'#1a3a1a'],[1,'#3a6a2a']], '🇰🇼', 'rgba(139,195,74,0.4)'); }
+function generateCard22() { return generateCardImage(22, 'أساطير الرياضة', [[0,'#1a0a00'],[0.5,'#3a1a00'],[1,'#5a2a00']], '🏆', 'rgba(255,193,7,0.4)'); }
+
+// ==========================================
+// BACKGROUND-TOP (1920x1080)
+// ==========================================
+function generateBackgroundTop() {
+  const { c, ctx } = setupCanvas(1920, 1080);
+
+  drawGradient(ctx, 0, 0, 1920, 1080, [
+    [0, '#4A1FCC'], [0.25, '#6A3BFF'], [0.5, '#7C4DFF'], [0.75, '#8E44FF'], [1, '#9C5CFF']
+  ]);
+
+  // Glows
+  const g1 = ctx.createRadialGradient(384, 324, 0, 384, 324, 600);
+  g1.addColorStop(0, 'rgba(255,191,0,0.1)');
+  g1.addColorStop(1, 'transparent');
+  ctx.fillStyle = g1;
+  ctx.fillRect(0, 0, 1920, 1080);
+
+  const g2 = ctx.createRadialGradient(1536, 648, 0, 1536, 648, 400);
+  g2.addColorStop(0, 'rgba(142,68,255,0.15)');
+  g2.addColorStop(1, 'transparent');
+  ctx.fillStyle = g2;
+  ctx.fillRect(0, 0, 1920, 1080);
+
+  const g3 = ctx.createRadialGradient(960, 216, 0, 960, 216, 500);
+  g3.addColorStop(0, 'rgba(255,255,255,0.05)');
+  g3.addColorStop(1, 'transparent');
+  ctx.fillStyle = g3;
+  ctx.fillRect(0, 0, 1920, 1080);
+
+  // Particles
+  const particles = [
+    [150,200,3], [400,100,2], [800,300,4], [1200,150,2], [1600,250,3],
+    [300,500,2], [700,600,3], [1100,400,2], [1500,550,4], [1800,350,2]
+  ];
+  particles.forEach(([x, y, r]) => {
+    ctx.globalAlpha = 0.12 + Math.random() * 0.08;
+    drawCircle(ctx, x, y, r, r > 3 ? 'rgba(255,191,0,0.15)' : 'rgba(255,255,255,0.2)');
+  });
+  ctx.globalAlpha = 1;
+
+  return c;
+}
+
+// ==========================================
+// FAVICON (32x32)
+// ==========================================
+function generateFavicon() {
+  const { c, ctx } = setupCanvas(32, 32);
+
+  drawGradient(ctx, 0, 0, 32, 32, [
+    [0, '#6A3BFF'], [1, '#8E44FF']
+  ]);
+  roundRect(ctx, 0, 0, 32, 32, 8);
+  ctx.fill();
+
+  ctx.fillStyle = 'white';
+  ctx.font = '900 18px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('؟', 16, 17);
+
+  return c;
+}
+
+// ==========================================
+// CARD DATA: All 54 game cards with unique icons & colors
+// ==========================================
+// Helper: generate 20 game card entries for a category
+function genGameCards(key, titles, c1, c2) {
+  return titles.map(function(t, i) {
+    return { file: 'card-' + key + '-' + (i+1) + '.png', label: t, icon: '✦', c1: c1, c2: c2 };
+  });
+}
+
+const gameCardData = [
+  ...genGameCards('football',   ['المنتخب','برشلونة','ريال مدريد','مان. سيتي','ليفربول','بايرن ميونخ','باريس سان جيرمان','مانشستر يونايتد','يوفنتوس','ميلان','إنتر ميلان','تشيلسي','آرسنال','توتنهام','بوروسيا دورتموند','أتلتيكو مدريد','روما','نابولي','أياكس','بنفيكا'], '#166534','#22C55E'),
+  ...genGameCards('sports',     ['UFC','كاراتيه','ملاكمة','فورمولا 1','كرة السلة','تنس','سباحة','جمباز','مصارعة حرة','جودو','تيكواندو','كرة اليد','الريشة الطائرة','كرة الطائرة','ركوب الخيل','الرماية','ألعاب القوى','رفع الأثقال','التجديف','الدراجات'], '#C2410C','#F97316'),
+  ...genGameCards('movies',     ['أكشن','كوميدي','رعب','خيال علمي','دراما','أنمي','إثارة','غموض','واقعي','خيالي','تاريخي','حربي','بوليسي','رومانسي','مغامرات','خارق للطبيعة','رسوم متحركة','وثائقي','موسيقي','غرب أمريكي'], '#7F1D1D','#DC2626'),
+  ...genGameCards('music',      ['أغاني عربية','أغاني خليجية','أغاني عالمية','كلاسيكية','راب','روك','جاز','هيب هوب','بوب','إلكترونية','بلوز','ريجي','آلات موسيقية','أوبرا','سيمفونية','تراثية','بدوية','مقامات','نشيد','فلكلور'], '#881337','#E11D48'),
+  ...genGameCards('general',    ['جغرافيا','حيوانات','نباتات','اختراعات','فضاء','محيطات','جبال','أنهار','جزر','بحيرات','صحاري','غابات','طقس','طاقة','ثروات طبيعية','الكواكب','النجوم','المجرات','الأرض','الكون'], '#0C4A6E','#0EA5E9'),
+  ...genGameCards('kuwait',     ['تاريخ الكويت','معالم الكويت','شخصيات كويتية','عادات وتقاليد','طعام كويتي','اللهجة الكويتية','الأعياد الكويتية','التراث البحري','الديوانية','السوق القديم','أعلام الكويت','الأدب الكويتي','الفن الكويتي','الرياضة الكويتية','الإعلام الكويتي','المطاعم الكويتية','الأزياء الكويتية','الحرف الكويتية','الموسيقى الكويتية','جزر الكويت'], '#064E3B','#10B981'),
+  ...genGameCards('science',    ['فيزياء','كيمياء','أحياء','تكنولوجيا','رياضيات','فلك','جيولوجيا','طب','صيدلة','هندسة','ذكاء اصطناعي','روبوتات','طاقة نووية','كمبيوتر','إنترنت','علم النفس','علم الاجتماع','بيئة','زراعة','أبحاث الفضاء'], '#155E75','#06B6D4'),
+  ...genGameCards('gaming',     ['بلايستيشن','إكس بوكس','نينتندو','بي سي','جوال','فورتنايت','ماينكرافت','فيفا','كول أوف ديوتي','بابجي','فري فاير','كلاش رويال','عالمي','سباق سيارات','ألعاب استراتيجية','ألعاب ألغاز','ألعاب رياضية','ألعاب حروب','ألعاب خيالية','ألعاب كلاسيكية'], '#172554','#2563EB'),
+  ...genGameCards('history',    ['تاريخ إسلامي','تاريخ حديث','حروب','حضارات','شخصيات تاريخية','تاريخ قديم','تاريخ وسيط','تاريخ عربي','تاريخ عالمي','غزوات','دول إسلامية','خلافات','معارك','ثورات','اكتشافات أثرية','أهرامات','قلاع','ممالك','إمبراطوريات','الاستكشاف'], '#78350F','#D97706'),
+  ...genGameCards('shows',      ['مسلسلات عربية','مسلسلات خليجية','برامج','كرتون','وثائقيات','مسلسلات تركية','مسلسلات أجنبية','مسلسلات كوميدية','مسلسلات درامية','مسلسلات تاريخية','برامج واقعية','برامج طبخ','برامج سفر','برامج مسابقات','برامج ترفيهية','رسوم متحركة قديمة','رسوم متحركة حديثة','أنمي','أفلام كرتون','مسلسلات كرتون'], '#9D174D','#EC4899'),
+  ...genGameCards('literature', ['شعر عربي','شعر عالمي','رواية','قصة قصيرة','مسرحية','أدب عربي','أدب عالمي','أدب أطفال','أدب خيالي','أدب بوليسي','كتب تاريخية','سير ذاتية','أدب رحلات','أمثال وحكم','أدب ساخر','نقد أدبي','أدب إسلامي','تراث أدبي','خواطر','مكتبات'], '#5B21B6','#8B5CF6'),
+  ...genGameCards('religion',   ['القرآن الكريم','الحديث الشريف','الفقه','العقيدة','السيرة النبوية','الصحابة','الأنبياء','التفسير','الأذكار','الصلاة','الصيام','الزكاة','الحج','الأخلاق الإسلامية','الدعاء','قصص إسلامية','المساجد','التاريخ الإسلامي','العمرة','رمضان'], '#065F46','#10B981'),
+  ...genGameCards('food',       ['أكلات خليجية','أكلات عربية','أكلات عالمية','حلويات','مقبلات','شوربات','سلطات','مشروبات','خبز','أطباق رئيسية','أكلات شعبية','أكلات صحية','أكلات سريعة','وجبات عائلية','مأكولات بحرية','أكلات نباتية','أكلات اللحوم','بهارات وتوابل','طبخ تقليدي','طبخ حديث'], '#B45309','#F59E0B'),
+  ...genGameCards('travel',     ['دول عربية','دول أجنبية','مدن سياحية','جزر','شواطئ','فنادق','مطاعم عالمية','معالم سياحية','مطارات','رحلات','سياحة دينية','سياحة ترفيهية','سياحة ثقافية','سياحة مغامرات','سياحة علاجية','السياحة في أوروبا','السياحة في آسيا','السياحة في أفريقيا','العطلات','السفر في الشتاء'], '#0369A1','#38BDF8'),
+  ...genGameCards('animals',    ['حيوانات برية','حيوانات أليفة','طيور','أسماك','زواحف','ثدييات','حيوانات مفترسة','حيوانات مهددة','حديقة حيوان','حشرات','حيوانات بحرية','ديناصورات','قرود','قطط','كلاب','خيول','فيلة','أسود','نمور','دببة'], '#3F6212','#65A30D'),
+  ...genGameCards('tech',       ['ذكاء اصطناعي','برمجة','تطبيقات','مواقع','أمن سيبراني','شبكات','قواعد بيانات','سحابة','إنترنت الأشياء','واقع افتراضي','بلوك تشين','العملات الرقمية','الروبوتات','الأجهزة الذكية','وسائل التواصل','التجارة الإلكترونية','التسويق الرقمي','الجرافيكس','ألعاب إلكترونية','تطوير الويب'], '#1E3A5F','#3B82F6'),
+];
+
+// ==========================================
+// GENERATE A SINGLE GAME CARD (400x280)
+// Professional geometric design — NO EMOJIS
+// ==========================================
+function generateGameCard(data) {
+  const { c, ctx } = setupCanvas(400, 280);
+  
+  // Background
+  const grad = ctx.createLinearGradient(0, 0, 400, 280);
+  grad.addColorStop(0, data.c1);
+  grad.addColorStop(1, data.c2);
+  ctx.fillStyle = grad;
+  roundRect(ctx, 0, 0, 400, 280, 16);
+  ctx.fill();
+
+  // Diagonal highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(120,0); ctx.lineTo(0,120); ctx.closePath(); ctx.fill();
+
+  // Pattern dots
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  for (let x = 20; x < 400; x += 35) for (let y = 20; y < 280; y += 35) { ctx.beginPath(); ctx.arc(x, y, 1.2, 0, Math.PI*2); ctx.fill(); }
+
+  // Glow orb
+  const glow = ctx.createRadialGradient(340, 50, 0, 340, 50, 160);
+  glow.addColorStop(0, 'rgba(255,255,255,0.07)'); glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, 400, 280);
+
+  // Bottom dark overlay
+  const overlay = ctx.createLinearGradient(0, 150, 0, 280);
+  overlay.addColorStop(0, 'transparent'); overlay.addColorStop(1, 'rgba(0,0,0,0.45)');
+  ctx.fillStyle = overlay; ctx.fillRect(0, 0, 400, 280);
+
+  // Decorative geometric circle (instead of emoji)
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 18;
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.beginPath(); ctx.arc(200, 120, 58, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+  // Inner ring
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(200, 120, 42, 0, Math.PI*2); ctx.stroke();
+  // Small diamond in center
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath(); ctx.moveTo(200,93); ctx.lineTo(218,120); ctx.lineTo(200,147); ctx.lineTo(182,120); ctx.closePath(); ctx.fill();
+  // Small decorative dots around the ring
+  for (let a = 0; a < 8; a++) {
+    const angle = (a / 8) * Math.PI * 2;
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.beginPath(); ctx.arc(200 + Math.cos(angle)*58, 120 + Math.sin(angle)*58, 3, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // Decorative corner circles
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.beginPath(); ctx.arc(320, 210, 30, 0, Math.PI*2); ctx.fill();
+
+  // Label at bottom
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = '700 18px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 6;
+  ctx.fillText(data.label, 200, 230);
+  ctx.shadowBlur = 0;
+
+  // Border
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1.5;
+  roundRect(ctx, 0, 0, 400, 280, 16); ctx.stroke();
+
+  return c;
+}
+
+// ==========================================
+// RENDER -> DOWNLOAD -> GRID
+// ==========================================
+const generators = [];
+
+// All banner/logo/button generators
+function registerAllAssets() {
+  // Logo
+  generators.push({ fn: generateLogo, file: 'logo.png', label: 'الشعار' });
+  // Banners
+  generators.push({ fn: generateTopBanner, file: 'top-banner.png', label: 'البانر العلوي' });
+  generators.push({ fn: generateBanner, file: 'banner.png', label: 'البانر' });
+  generators.push({ fn: generateHero, file: 'hero-1920x1080.png', label: 'الصورة الرئيسية' });
+  generators.push({ fn: generateBackgroundTop, file: 'background-top.png', label: 'خلفية علوية' });
+  // Promos
+  for (let i = 1; i <= 5; i++) {
+    const fnName = 'generatePromo' + i;
+    generators.push({ fn: window[fnName], file: 'promo-banner-' + i + '.png', label: 'إعلان ' + i });
+  }
+  // Buttons
+  generators.push({ fn: generateButtonStart, file: 'button-start.png', label: 'زر البدء' });
+  generators.push({ fn: generateButtonOffers, file: 'button-offers.png', label: 'زر العروض' });
+  generators.push({ fn: generateButtonNew, file: 'button-new.png', label: 'زر الجديد' });
+  // Favicon
+  generators.push({ fn: generateFavicon, file: 'favicon.png', label: 'الايقونة' });
+  // Game cards
+  gameCardData.forEach(data => {
+    generators.push({ fn: function() { return generateGameCard(data); }, file: data.file, label: data.label });
+  });
+}
+
+function generateAll() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  let count = 0;
+  generators.forEach((gen, idx) => {
+    const canvas = gen.fn();
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.animationDelay = (idx * 0.02) + 's';
+    card.style.animation = 'fadeIn 0.4s ease backwards';
+    const c = document.createElement('canvas');
+    c.width = canvas.width;
+    c.height = canvas.height;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(canvas, 0, 0);
+    c.style.maxWidth = '100%';
+    card.appendChild(c);
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    title.textContent = gen.label;
+    card.appendChild(title);
+    const info = document.createElement('div');
+    info.className = 'card-info';
+    info.textContent = gen.file + ' (' + canvas.width + 'x' + canvas.height + ')';
+    card.appendChild(info);
+    const btn = document.createElement('button');
+    btn.className = 'btn-save';
+    btn.textContent = '💾 تحميل';
+    btn.onclick = function() { downloadCanvas(c, gen.file); };
+    card.appendChild(btn);
+    grid.appendChild(card);
+    count++;
+  });
+  showStatus('✅ تم توليد ' + count + ' صورة بنجاح!', 'success');
+}
+
+function downloadCanvas(canvas, filename) {
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showStatus('💾 تم تحميل ' + filename, 'info');
+}
+
+function downloadAll() {
+  generators.forEach((gen, idx) => {
+    setTimeout(() => {
+      const canvas = gen.fn();
+      downloadCanvas(canvas, gen.file);
+    }, idx * 500);
+  });
+  showStatus('💾 سيتم تحميل ' + generators.length + ' صورة...', 'info');
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+  setTimeout(() => { el.classList.remove('show'); }, 4000);
+}
+
+function updateProgress(current, total) {
+  const fill = document.getElementById('progressFill');
+  if (fill) fill.style.width = Math.round((current / total) * 100) + '%';
+}
+
+// ==========================================
+// DOWNLOAD ALL AS ZIP
+// ==========================================
+function downloadAllZip() {
+  showStatus('📦 جاري تحضير ملف ZIP...', 'info');
+  updateProgress(0, generators.length);
+  
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+  script.onload = function() {
+    const zip = new JSZip();
+    let completed = 0;
+    generators.forEach(function(gen, idx) {
+      setTimeout(function() {
+        const canvas = gen.fn();
+        const dataURL = canvas.toDataURL('image/png');
+        const base64 = dataURL.split(',')[1];
+        zip.file(gen.file, base64, {base64: true});
+        completed++;
+        updateProgress(completed, generators.length);
+        if (completed === generators.length) {
+          zip.generateAsync({type: 'blob'}).then(function(content) {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = 'soal-jawab-images.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            showStatus('📦 تم تحميل ملف ZIP بنجاح!', 'success');
+          });
+        }
+      }, idx * 80);
+    });
+  };
+  script.onerror = function() {
+    showStatus('⚠️ فشل تحميل JSZip. استخدم زر التحميل التسلسلي بدلاً من ذلك.', 'error');
+  };
+  document.head.appendChild(script);
+}
+
+// ==========================================
+// KEYBOARD SHORTCUT: ENTER to download all images
+// ==========================================
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    downloadAll();
+  }
+});
+
+// ==========================================
+// INIT
+// ==========================================
+registerAllAssets();
+generateAll();
+</script>
+</body>
+</html>

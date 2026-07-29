@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="سؤال وجواب - لعبة الأسئلة التفاعلية">
+  <meta name="theme-color" content="#4C1D95">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="stylesheet" href="gamestart.css">
+  <title>سؤال وجواب - اللعبة</title>
+</head>
+<body>
+  <!-- Background Effects -->
+  <div class="gs-bg" aria-hidden="true"></div>
+  <div class="gs-glow-1" aria-hidden="true"></div>
+  <div class="gs-glow-2" aria-hidden="true"></div>
+  <div class="gs-bg-particles" id="gsParticles"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="gsConfettiCanvas"></canvas>
+
+  <!-- ===== START SCREEN ===== -->
+  <div class="gs-start-screen" id="gsStartScreen">
+    <div class="gs-start-card">
+      <div class="gs-start-logo">❓❗</div>
+      <div class="gs-start-title">سؤال وجواب</div>
+      <div class="gs-start-sub">حان وقت التحدي! ادخل معلومات الفرق وابدأ</div>
+      
+      <div class="gs-start-vs-row">
+        <div class="gs-start-team-box t1-box">
+          <div class="gs-start-team-label">🔴 الفريق الأول</div>
+          <input class="gs-start-team-input" id="gsStartName1" placeholder="اسم الفريق الأول" maxlength="20" value="الفريق الأول">
+          <div class="gs-start-player-row">
+            <span class="gs-start-player-label">👥 عدد اللاعبين</span>
+            <input class="gs-start-player-num" id="gsStartPlayers1" type="number" min="1" max="20" value="2">
+          </div>
+          <div class="gs-start-cards-preview" id="gsStartCards1"></div>
+        </div>
+        <div class="gs-start-vs-text">VS</div>
+        <div class="gs-start-team-box t2-box">
+          <div class="gs-start-team-label">🟢 الفريق الثاني</div>
+          <input class="gs-start-team-input" id="gsStartName2" placeholder="اسم الفريق الثاني" maxlength="20" value="الفريق الثاني">
+          <div class="gs-start-player-row">
+            <span class="gs-start-player-label">👥 عدد اللاعبين</span>
+            <input class="gs-start-player-num" id="gsStartPlayers2" type="number" min="1" max="20" value="2">
+          </div>
+          <div class="gs-start-cards-preview" id="gsStartCards2"></div>
+        </div>
+      </div>
+      
+      <button class="gs-start-btn-main" id="gsStartBtn">▶ بدء اللعبة</button>
+      <div class="gs-start-footer">كل فريق يختار ٣ بطاقات من gamecard</div>
+    </div>
+  </div>
+
+  <!-- ===== GAME ===== -->
+  <div class="gs-game" id="gsGame">
+    <div class="gs-container">
+
+      <!-- Top Bar -->
+      <div class="gs-top-bar" id="gsTopBar">
+        <div class="gs-team-info t1">
+          <div class="gs-team-name" id="gsTeamName1">الفريق الأول</div>
+          <div class="gs-team-turn-badge" id="gsTurnBadge1">⭐ دورك!</div>
+          <div class="gs-score-wrap">
+            <span class="gs-score-icon">🏆</span>
+            <span class="gs-score" id="gsScore1">0</span>
+          </div>
+        </div>
+        <div class="gs-vs-wrap">
+          <div class="gs-vs-text">VS</div>
+          <div class="gs-question-counter" id="gsQuestionCounter">0/0</div>
+        </div>
+        <div class="gs-team-info t2">
+          <div class="gs-team-name" id="gsTeamName2">الفريق الثاني</div>
+          <div class="gs-team-turn-badge" id="gsTurnBadge2">⭐ دورك!</div>
+          <div class="gs-score-wrap">
+            <span class="gs-score-icon">🏆</span>
+            <span class="gs-score" id="gsScore2">0</span>
+          </div>
+        </div>
+        <div class="gs-progress-bar"><div class="gs-progress-fill" id="gsProgressFill"></div></div>
+      </div>
+
+      <!-- Power-ups -->
+      <div class="gs-powerups-bar" id="gsPowerupsBar">
+        <span class="gs-powerups-label">⚡ وسائل المساعدة</span>
+        <button class="gs-pu-btn double" data-pu="double" onclick="usePowerup('double')">
+          <span class="pu-icon">💰</span> تدبيل النقاط
+          <span class="pu-cooldown">7</span>
+        </button>
+        <button class="gs-pu-btn wheel" data-pu="wheel" onclick="usePowerup('wheel')">
+          <span class="pu-icon">🎡</span> دوارة الحظ
+          <span class="pu-cooldown">7</span>
+        </button>
+        <button class="gs-pu-btn fifty" data-pu="fifty" onclick="usePowerup('fifty')">
+          <span class="pu-icon">✂️</span> 50/50
+          <span class="pu-cooldown">7</span>
+        </button>
+        <button class="gs-pu-btn steal" data-pu="steal" onclick="usePowerup('steal')">
+          <span class="pu-icon">🦅</span> سرقة النقاط
+          <span class="pu-cooldown">7</span>
+        </button>
+        <button class="gs-pu-btn skip" data-pu="skip" onclick="usePowerup('skip')">
+          <span class="pu-icon">⏭️</span> تخطي
+          <span class="pu-cooldown">7</span>
+        </button>
+      </div>
+
+      <!-- Board -->
+      <div class="gs-board" id="gsBoard"></div>
+
+    </div>
+  </div>
+
+  <!-- ===== QUESTION OVERLAY ===== -->
+  <div class="gs-overlay" id="gsQuestionOverlay">
+    <div class="gs-question-modal" id="gsQuestionModal">
+      <div class="gs-q-header">
+        <span class="gs-q-category" id="gsQCategory">كرة القدم</span>
+        <span class="gs-q-diff" id="gsQDiff">200</span>
+        <span class="gs-q-points" id="gsQPoints">🏆 200</span>
+      </div>
+      <div class="gs-q-image-wrap">
+        <canvas id="gsQImageCanvas"></canvas>
+      </div>
+      <div class="gs-q-text" id="gsQText">ما هو أكبر ملعب كرة قدم في العالم؟</div>
+      <div class="gs-q-answer-area">
+        <div class="gs-q-answer-text" id="gsQAnswer">ملعب رونغمايو، كوريا الشمالية</div>
+        <div class="gs-q-team-select" id="gsQTeamSelect">
+          <button class="gs-q-team-btn t1-btn" onclick="awardPoints(1)">🏆 الفريق الأول جاوب صح ✅</button>
+          <button class="gs-q-team-btn t2-btn" onclick="awardPoints(2)">🏆 الفريق الثاني جاوب صح ✅</button>
+          <button class="gs-q-team-btn none-btn" onclick="awardPoints(0)">❌ ولا أحد جاوب صح</button>
+        </div>
+        <button class="gs-q-reveal-btn" id="gsQRevealBtn" onclick="revealAnswer()">🔍 إظهار الإجابة</button>
+        <button class="gs-q-close-btn" id="gsQCloseBtn" onclick="closeQuestion()">✕ رجوع للوحة اللعبة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== WHEEL OVERLAY ===== -->
+  <div class="gs-wheel-overlay" id="gsWheelOverlay">
+    <div class="gs-wheel-modal">
+      <div class="gs-wheel-title">🎡 دوارة الحظ</div>
+      <div class="gs-wheel-container">
+        <div class="gs-wheel-pointer">▼</div>
+        <canvas class="gs-wheel-canvas" id="gsWheelCanvas" width="220" height="220"></canvas>
+      </div>
+      <div class="gs-wheel-result" id="gsWheelResult">🎉 ×٢ النقاط!</div>
+      <button class="gs-wheel-spin-btn" id="gsWheelSpinBtn" onclick="spinWheel()">🔄 دير الدوارة!</button>
+    </div>
+  </div>
+
+  <!-- ===== WINNER OVERLAY ===== -->
+  <div class="gs-winner-overlay" id="gsWinnerOverlay">
+    <div class="gs-winner-modal">
+      <div class="gs-winner-trophy">🏆</div>
+      <div class="gs-winner-stars">✨⭐✨</div>
+      <div class="gs-winner-title">🎉 فوز عظيم 🎉</div>
+      <div class="gs-winner-name" id="gsWinnerName">الفريق الأول</div>
+      <div class="gs-winner-score">مجموع النقاط: <span id="gsWinnerScore">3000</span></div>
+      <div class="gs-winner-btns">
+        <button class="gs-winner-btn primary" onclick="playAgain()">🔄 لعب مرة أخرى</button>
+        <button class="gs-winner-btn secondary" onclick="goHome()">🏠 العودة للرئيسية</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimal inline handler for gsStartBtn -->
+  <script>
+  (function(){
+    'use strict';
+    try {
+      var btn = document.getElementById('gsStartBtn');
+      if(btn) {
+        btn.addEventListener('click', function() {
+          try {
+            console.log('START BTN CLICKED (inline)');
+            if(typeof window.startGame === 'function') {
+              window.startGame();
+            } else {
+              var diag = [];
+              if(typeof window.openQuestion === 'function') diag.push('openQuestion=✅'); else diag.push('openQuestion=❌');
+              if(typeof window.revealAnswer === 'function') diag.push('revealAnswer=✅'); else diag.push('revealAnswer=❌');
+              if(typeof window.awardPoints === 'function') diag.push('awardPoints=✅'); else diag.push('awardPoints=❌');
+              if(typeof window.closeQuestion === 'function') diag.push('closeQuestion=✅'); else diag.push('closeQuestion=❌');
+              if(typeof window.goHome === 'function') diag.push('goHome=✅'); else diag.push('goHome=❌');
+              if(typeof window.spinWheel === 'function') diag.push('spinWheel=✅'); else diag.push('spinWheel=❌');
+              var loaded = diag.filter(function(s){return s.indexOf('✅')!==-1;}).length;
+              var msg = loaded > 0
+                ? '❌ gamestart.js partially loaded ('+loaded+'/'+diag.length+' functions). Console (F12) has details.'
+                : '❌ gamestart.js failed! Check Console (F12) for the exact error.';
+              console.error(msg, diag.join(', '));
+              var t = document.createElement('div');
+              t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:14px;font-family:Tajawal,sans-serif;font-size:15px;font-weight:700;z-index:9999;direction:rtl;text-align:center;background:rgba(239,68,68,0.9);color:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.3);animation:gsToastIn 0.4s ease';
+              t.textContent = msg;
+              document.body.appendChild(t);
+              setTimeout(function(){t.remove();},20000);
+            }
+          } catch(e) {
+            console.error('❌ Error:', e);
+            alert('⚠️ خطأ: ' + e.message);
+          }
+        });
+      }
+    } catch(e) {
+      console.error('❌ Setup error:', e);
+    }
+  })();
+  </script>
+  <script src="gamestart.js?v=20260728"></script>
+  <!-- Diagnostic after gamestart.js -->
+  <script>
+  (function(){
+    var checks = [
+      ['startGame', typeof window.startGame === 'function'],
+      ['openQuestion', typeof window.openQuestion === 'function'],
+      ['revealAnswer', typeof window.revealAnswer === 'function'],
+      ['awardPoints', typeof window.awardPoints === 'function'],
+      ['closeQuestion', typeof window.closeQuestion === 'function'],
+      ['usePowerup', typeof window.usePowerup === 'function'],
+      ['spinWheel', typeof window.spinWheel === 'function'],
+      ['playAgain', typeof window.playAgain === 'function'],
+      ['goHome', typeof window.goHome === 'function']
+    ];
+    var allOk = true;
+    for(var i=0;i<checks.length;i++){ if(!checks[i][1]){ allOk=false; break; } }
+    if(!allOk) {
+      var failed = [];
+      for(var i=0;i<checks.length;i++){ if(!checks[i][1]) failed.push(checks[i][0]); }
+      console.error('❌ gamestart.js FAILED! Missing:', failed.join(', '));
+    } else {
+      console.log('✅ gamestart.js loaded: all exports available.');
+    }
+  })();
+  </script>
+</body>
+</html>

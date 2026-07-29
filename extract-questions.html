@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>استخراج الأسئلة - سؤال وجواب</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Tajawal',sans-serif;background:#0a0a1a;color:#fff;padding:20px;direction:rtl}
+h1{font-size:28px;font-weight:900;margin-bottom:8px;background:linear-gradient(135deg,#fff 30%,#C084FC 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.sub{text-align:center;color:rgba(255,255,255,0.5);margin-bottom:30px;font-size:14px}
+.container{max-width:800px;margin:0 auto}
+.card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:24px;margin-bottom:16px}
+.btn{padding:14px 36px;border:none;border-radius:14px;font-family:'Tajawal',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:all 0.3s ease;margin:0 8px 12px}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:linear-gradient(135deg,#A855F7,#7C3AED);color:#fff;box-shadow:0 4px 20px rgba(168,85,247,0.3)}
+.btn-success{background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;box-shadow:0 4px 20px rgba(34,197,94,0.3)}
+.btn-secondary{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.1)}
+.status{padding:14px;border-radius:12px;margin-top:16px;display:none;font-weight:700;text-align:center}
+.status.show{display:block}
+.status.success{background:rgba(34,197,94,0.15);color:#4ADE80;border:1px solid rgba(34,197,94,0.2)}
+.status.info{background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.2)}
+.status.error{background:rgba(239,68,68,0.15);color:#F87171;border:1px solid rgba(239,68,68,0.2)}
+.steps{list-style:none;counter-reset:step}
+.steps li{counter-increment:step;margin-bottom:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.06);font-size:14px}
+.steps li::before{content:counter(step);display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;background:#A855F7;border-radius:50%;color:#fff;font-weight:800;font-size:13px;margin-left:10px}
+code{background:rgba(168,85,247,0.15);color:#C084FC;padding:2px 8px;border-radius:4px;font-size:13px}
+pre{background:rgba(0,0,0,0.3);border-radius:12px;padding:16px;overflow:auto;max-height:300px;font-size:11px;color:rgba(255,255,255,0.7);margin-top:12px;direction:ltr;text-align:left;display:none}
+</style>
+</head>
+<body>
+<h1>📦 أداة استخراج الأسئلة</h1>
+<p class="sub">استخرج جميع الأسئلة الحقيقية من gamestart.js إلى ملف questions.json منفصل</p>
+<div class="container">
+
+<div class="card">
+<h2 style="font-size:18px;margin-bottom:12px">📋 التعليمات</h2>
+<ol class="steps">
+  <li>تأكد أن <code>gamestart.js</code> موجود في نفس المجلد</li>
+  <li>اضغط <strong>"🔄 استخراج الأسئلة"</strong></li>
+  <li>شاهد النتيجة - سيتم عرض عدد الأسئلة المستخرجة</li>
+  <li>اضغط <strong>"💾 تحميل questions.json"</strong></li>
+  <li>ضع الملف المحمّل في مجلد <code>data/</code></li>
+  <li>بعدها اللعبة راح تستخدم الأسئلة من الملف تلقائياً</li>
+</ol>
+</div>
+
+<div class="card" style="text-align:center">
+<h2 style="font-size:18px;margin-bottom:12px">🔧 استخراج الأسئلة</h2>
+
+<div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:14px;padding:16px;margin-bottom:16px;text-align:right">
+  <p style="font-size:14px;font-weight:700;margin-bottom:8px">⭐ الطريقة الأفضل والأضمن:</p>
+  <ol style="font-size:13px;color:rgba(255,255,255,0.7);line-height:2;list-style-position:inside">
+    <li>افتح <strong><code>gamestart.html</code></strong> في المتصفح</li>
+    <li>اضغط <strong>F12</strong> > Console</li>
+    <li>انسخ والصق هذا الأمر واضغط Enter:<br>
+      <code style="background:#1a1a2e;display:inline-block;padding:8px 14px;border-radius:8px;margin:6px 0;direction:ltr">copy(JSON.stringify(window.cardQuestionBanks))</code>
+    </li>
+    <li>افتح Notepad، الصق المحتوى، احفظه كـ <code>questions.json</code></li>
+    <li>ضع الملف في مجلد <code>data/</code></li>
+  </ol>
+</div>
+
+<button class="btn btn-primary" onclick="extractQuestions()">🔄 استخراج الأسئلة تلقائياً</button>
+<button class="btn btn-success" onclick="downloadJSON()" id="downloadBtn" disabled>💾 تحميل questions.json</button>
+<div class="status" id="status"></div>
+<pre id="preview"></pre>
+</div>
+
+<div class="card">
+<h2 style="font-size:18px;margin-bottom:12px">ℹ️ معلومات</h2>
+<p style="font-size:13px;color:rgba(255,255,255,0.5)">
+  الملف الناتج يحتوي على جميع أسئلة اللعبة. اللعبة في <code>gamestart.js</code> راح تحاول تحميل 
+  <code>data/questions.json</code> أولاً. إذا ما وجدته، تستخدم الأسئلة المضمنة في Q() calls.
+  <br><br>
+  حجم <code>questions.json</code> المتوقع: <strong>حوالي 500-900 كيلوبايت</strong> (2880+ سؤال)
+</p>
+</div>
+
+</div>
+
+<script>
+let extractedQuestions = null;
+let extractionAttempted = false;
+
+function extractQuestions() {
+  showStatus('⏳ جاري تحميل gamestart.js لاستخراج الأسئلة...', 'info');
+  extractionAttempted = true;
+  
+  // Method 1: Try using an iframe to load gamestart.js and access cardQuestionBanks
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = 'gamestart.html';
+    document.body.appendChild(iframe);
+    
+    iframe.onload = function() {
+      try {
+        const cqb = iframe.contentWindow.cardQuestionBanks;
+        if (cqb && Object.keys(cqb).length > 0) {
+          const questions = {};
+          Object.keys(cqb).forEach(key => {
+            questions[key] = cqb[key];
+          });
+          
+          extractedQuestions = {
+            version: '1.0',
+            totalQuestions: Object.keys(questions).reduce((sum, k) => sum + questions[k].length, 0),
+            questions: questions
+          };
+          
+          showStatus('✅ تم استخراج ' + extractedQuestions.totalQuestions + ' سؤال من ' + 
+            Object.keys(questions).length + ' مجموعة بنجاح!', 'success');
+          document.getElementById('downloadBtn').disabled = false;
+          
+          const preview = document.getElementById('preview');
+          preview.style.display = 'block';
+          preview.textContent = JSON.stringify(extractedQuestions, null, 2).slice(0, 2000) + '\n\n... (إجمالي ' + 
+            (new Blob([JSON.stringify(extractedQuestions)]).size / 1024).toFixed(0) + ' كيلوبايت)';
+          
+          document.body.removeChild(iframe);
+          return;
+        }
+      } catch(iframeErr) {
+        console.warn('Iframe method failed:', iframeErr);
+      }
+      
+      document.body.removeChild(iframe);
+      tryDirectLoad();
+    };
+    
+    iframe.onerror = function() {
+      document.body.removeChild(iframe);
+      tryDirectLoad();
+    };
+    
+    // Timeout after 15 seconds
+    setTimeout(function() {
+      if (!extractedQuestions) {
+        try {
+          document.body.removeChild(iframe);
+        } catch(e) {}
+        tryDirectLoad();
+      }
+    }, 15000);
+    
+  } catch(e) {
+    console.warn('Iframe creation failed:', e);
+    tryDirectLoad();
+  }
+}
+
+function tryDirectLoad() {
+  showStatus('⏳ محاولة التحميل المباشر...', 'info');
+  
+  // Method 2: Load gamestart.js directly via fetch and eval
+  fetch('gamestart.js?v=' + Date.now())
+    .then(response => {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.text();
+    })
+    .then(code => {
+      // We can't easily extract cardQuestionBanks from the raw code
+      // because it uses template strings and forEach loops
+      throw new Error('مباشر يحتاج إعادة تشغيل كامل للصفحة');
+    })
+    .catch(err => {
+      console.error('Direct load failed:', err);
+      showStatus('⚠️ ' + err.message + '<br><br>💡 <strong>بديل:</strong> قم بفتح <code>gamestart.html</code> في علامة تبويب منفصلة وفي Console أكتب:<br><br><code style="background:#222;padding:8px 16px;display:inline-block;border-radius:8px;margin:8px">copy(JSON.stringify(window.cardQuestionBanks))</code><br><br>ثم save الناتج كـ <code>data/questions.json</code>', 'error');
+    });
+}
+
+function downloadJSON() {
+  if (!extractedQuestions) {
+    showStatus('⚠️ يرجى استخراج الأسئلة أولاً', 'error');
+    return;
+  }
+  
+  const blob = new Blob([JSON.stringify(extractedQuestions, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'questions.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  
+  showStatus('💾 تم تحميل questions.json (ضع الملف في مجلد data/)', 'info');
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.className = 'status show ' + type;
+  el.innerHTML = msg;
+}
+</script>
+</body>
+</html>
